@@ -100,9 +100,57 @@ cd NjoyConverter
 
 The automation script ```automate.py``` automatically writes input scripts of the same 
 format as those found in ```examples```. 
-The aim of the script is to provide a streamlined input for generating cross-sections.
-Specification instructions can be found by calling ```python automate.py --help``` from
-the command line.
+The aim of the script is to provide a streamlined input for generating cross-sections
+for a number of materials, group structures, and temperatures.
+The available input options are ```--materials```, ```--group_structures```, 
+```--temperatures```, ```--no_thermal```, ```--option```, and ```--plot```.
+
+The ```--materials``` are specified as a space separated list where each material
+has the form ```<zzz>-<symbol>-<aaa>-<molecule>```, where ```<molecule>``` should 
+only be specified when thermal S(alpha, beta) treatment is desired.
+Note that only a few molecules are implemented in this code because each molecule 
+corresponds to an accompanying set of molecule-specific inputs.
+To implement other molecules, the user should define the molecule parameters
+within the ```get_thermal_info``` routine within ```utils.py```.
+
+The ```--group_structures``` inputs are also specified as a space separated list.
+Group structures are specified via ```<type><g><p>``` where currently implemented 
+types are ```custom``` and ```lanl```, ```g``` is the number of energy groups, and 
+```p``` is the first letter of the particle type.
+Note that for custom group structures the file
+```/path/to/repo/output/<endf-version>/custom<g><p>/custom<g><p>.txt``` must exist.
+For LANL group structures, only the available group structures within NJOY can
+be specified.
+One can see a list of all neutron and gamma group structures by calling
+```python3 njoy_utilities/njoy_runner.py --help```.
+If different available group structures are desired, the user is encouraged to 
+implement this within ```get_group_structure_info``` routine within ```utils.py```.
+Multi-particle group structures can similarly be specified using a ```-``` between 
+group structure specifications.
+
+The ```--temperatures``` are specified as a space separated list of floats.
+This argument defaults to room temperature.
+
+The ```--no_thermal``` input is used to turn off thermal treatment for particular
+materials that were specified.
+This input takes the form of a list of integers where each integer corresponds to the
+index of a material in the ```--materials``` list.
+This input is optional. By default, thermal treatment is on for all materials.
+
+The ```--option``` flag is an integer input that specifies whether to run NJOY, 
+process an existing NJOY output, or both.
+When 0, NJOY is run and the output processed.
+This is the default behavior.
+When 1, only NJOY is run.
+When 2, only an NJOY output is processed.
+Note that when 2 is specified, the run will fail if NJOY output files for the 
+specified materials, group structures, and temperatures do not exist.
+The script searches for such files in the predefined directory structure
+```/path/to/repo/output/<endf-version>/<group-structure>/<temperature>k```.
+
+The ```--plot``` flag, when specified, will produce plots for each of the 
+cross-sections generated.
+This does nothing when ```--option``` is set to 1.
 
 ### Step 4b: Adapt one of the example scripts to your specific application
 
@@ -158,6 +206,25 @@ echo "********** DONE with PROCESSING"
 
 cd "$CWD" || exit
 ```
+
+## Note:
+
+The user should be warned that NJOY outputs have a tendency to differ based 
+on the specified NJOY options.
+For this reason, if a previously unseen NJOY output is observed, the parsers
+used by the NJOY processor should be modified to account for that particular 
+type of output.
+
+Further, it should be noted that several difficulties have been observed in 
+generating photonuclear cross-sections with low-Z materials.
+This problem may lie within NJOY or be a lack of understanding by the author.
+In any case, the user should be wary when attempting to generate such data.
+
+Users are encouraged to submit additions to the code such as additional 
+supported molecules or group structures to the repository via a pull-request.
+
+If any bugs are observed or features desired, the user is encouraged to submit 
+an issue.
 
 ## FAQs:
 
