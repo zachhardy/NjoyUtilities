@@ -98,10 +98,8 @@ else:
 
 xs_output_directory = os.path.join(output_directory, "xs")
 if not os.path.isdir(xs_output_directory):
-    warnings.warn(
-        f"Output directory for `.xs` files does not exist. "
-        f"Creating it at {xs_output_directory}."
-    )
+    warnings.warn(f"Output directory for `.xs` files does not exist. "
+                  f"Creating it at {xs_output_directory}.")
     os.makedirs(xs_output_directory)
 
 xs_output_path = os.path.join(xs_output_directory, xs_filename)

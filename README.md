@@ -63,18 +63,18 @@ cd NJOY2016
 wget https://raw.githubusercontent.com/njoy/signatures/master/NJOY21/1.1.0-NJOY21.json
 ./metaconfigure/fetch_subprojects.py 1.1.0-NJOY21.json
 ```
-Yes we know the file points to NJOY21. We checked and it works for NJOY2016.
+Yes, we know the file points to NJOY21. We checked and it works for NJOY2016.
 
 ```shell
 # Configure the build process
 mkdir bin
 cd bin
-cmake -D fetched_subprojects=true ../
+cmake -D CMAKE_BUILD_TYPE=Release ..
 
-# Build NJOY16
+# Build NJOY21
 make
 
-# Test NJOY16
+# Test NJOY21
 make test
 ```
 
@@ -96,7 +96,15 @@ git clone https://github.com/<username>/NjoyConverter
 cd NjoyConverter
 ```
 
-### Step 4: Adapt one of the example scripts to your specific application
+### Step 4a: Use the automation tool to generate the desired cross-sections
+
+The automation script ```automate.py``` automatically writes input scripts of the same 
+format as those found in ```examples```. 
+The aim of the script is to provide a streamlined input for generating cross-sections.
+Specification instructions can be found by calling ```python automate.py --help``` from
+the command line.
+
+### Step 4b: Adapt one of the example scripts to your specific application
 
 The example scripts are a collection of neutron only examples:
 - `example1a.sh`, U235 with a xmas172 neutron group structure
@@ -154,7 +162,9 @@ cd "$CWD" || exit
 ## FAQs:
 
 ### FAQ-1: General format of input examples
-The two python scripts are `njoy_runner.py` and `njoy_processor.py`.
+
+The two python scripts are `njoy_runner.py` and `njoy_processor.py` located 
+in the ```njoy_utilities``` directory.
 
 The `njoy_runner.py` script basically runs NJOY and has the following 
 inputs (most of which are optional):
@@ -184,16 +194,14 @@ The `njoy_processor.py` script converts NJOY output to the desired multi-group
 tranport cross-section format. 
 It only has three required inputs:
 ```
-cd njoy_processor
-
-python njoy_processor.py \
---output_directory=$output_directory \
---njoy_output_filename=$output_file_prefix.njoy \
---xs_filename=$output_file_prefix.xs
+#--output_directory=$output_directory \
+#--njoy_output_filename=$output_file_prefix.njoy \
+#--xs_filename=$output_file_prefix.xs
 ```
 Optionally a ```--plot``` flag can be used to visualize the data.
 
 ### FAQ-2: How to specify S(a,b) thermal scattering
+
 Simply run `njoy_runner.py` with `--path_to_sab_endf`, 
 `--inelastic_thermal_number=`, `--inelastic_thermal_num_atoms`, 
 and `--elastic_thermal_number` specified.

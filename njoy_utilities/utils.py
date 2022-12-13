@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 import textwrap
+import warnings
 
 
 def get_material_info(material: str) -> dict:
@@ -26,11 +27,26 @@ def get_material_info(material: str) -> dict:
     molecule = None if len(entries) < 4 else entries[3]
 
     endf_root = os.environ['ENDF_ROOT']
+
+    neutron_endf = f"{endf_root}/neutrons/n-{isotope}.endf"
+    if not os.path.isfile(neutron_endf):
+        warnings.warn("No neutron ENDF file found.")
+        neutron_endf = None
+
+    gamma_endf = f"{endf_root}/gammas/g-{isotope}.endf"
+    if not os.path.isfile(gamma_endf):
+        warnings.warn("No gamma ENDF file found.")
+        gamma_endf = None
+
+    photoat_endf = f"{endf_root}/photoat/photoat-{element}.endf"
+    if not os.path.isfile(photoat_endf):
+        warnings.warn("No photo-atomic ENDF file found.")
+        photoat_endf = None
+
     return {'isotope': isotope, 'molecule': molecule,
             'atomic_number': Z, 'symbol': symbol, 'mass_number': A,
-            'neutron_endf': f"{endf_root}/neutrons/n-{isotope}.endf",
-            'gamma_endf': f"{endf_root}/gammas/g-{isotope}.endf",
-            'photoat_endf': f"{endf_root}/photoat/photoat-{element}.endf"}
+            'neutron_endf': neutron_endf, 'gamma_endf': gamma_endf,
+            'photoat_endf': photoat_endf}
 
 
 def get_thermal_info(element: str, molecule: str) -> dict:
@@ -76,14 +92,13 @@ def get_thermal_info(element: str, molecule: str) -> dict:
     return info
 
 
-def get_group_structure_info(neutron_gs: str, gamma_gs: str) -> dict:
+def get_group_structure_info(group_structures: list[str]) -> dict:
     """
     Return the NJOY group structure inputs.
 
     Parameters
     ----------
-    neutron_gs : str
-    gamma_gs : str
+    group_structures : list[str]
 
     Returns
     -------
@@ -93,35 +108,46 @@ def get_group_structure_info(neutron_gs: str, gamma_gs: str) -> dict:
     str, A path to a custom gamma group structure file.
     """
 
-    info = {'output_directory': None,
+    info = {'outdir': "output/ENDF-B-VIII-0",
             'neutron': {}, 'gamma': {}}
 
-    # define output directory
-    outdir = f"output/ENDF-B-VIII-0"
+    # ------------------------------ find present group structures
+    neutron_gs, gamma_gs = None, None
+    for gs in group_structures:
+        if gs.endswith('n'):
+            neutron_gs = gs
+        elif gs.endswith('g'):
+            gamma_gs = gs
+        else:
+            raise AssertionError(
+                "Unrecognized group structure specification."
+            )
+
+    # ------------------------------ define the output directory
+    if neutron_gs and gamma_gs:
+        outdir = f"{neutron_gs}_{gamma_gs}"
+    elif neutron_gs and not gamma_gs:
+        outdir = f"{neutron_gs}"
+    elif gamma_gs and not neutron_gs:
+        outdir = f"{gamma_gs}"
+    else:
+        raise AssertionError("No neutron or gamma group structure found.")
+    info['outdir'] = os.path.join(info['outdir'], outdir)
+
+    # ------------------------------ define the neutron NJOY input
     if neutron_gs:
-        outdir = f"{outdir}/{neutron_gs}n"
-    if gamma_gs:
-        sep = "/" if not neutron_gs else "_"
-        outdir = f"{outdir}{sep}{gamma_gs}g"
-    info['output_directory'] = outdir
 
-    ##################################################
-    # Neutron group structure
-    ##################################################
-
-    if neutron_gs:
-
-        # check custom
+        # custom group structures
         if neutron_gs.startswith("custom"):
             info['neutron']['gs_id'] = 1
 
-            # check the custom file
-            ngs_file = f"{outdir}/{neutron_gs}n.txt"
-            if not os.path.isfile(ngs_file):
-                raise FileNotFoundError(f"{ngs_file} is not a valid file.")
-            info['neutron']['gs_file'] = ngs_file
+            # ensure there is a custom file
+            n_gs_file = os.path.join(info['outdir'], f"{neutron_gs}.txt")
+            if not os.path.isfile(n_gs_file):
+                raise FileNotFoundError(f"{n_gs_file} is not a valid file.")
+            info['neutron']['gs_file'] = n_gs_file
 
-        # check lanl
+        # lanl group structures
         elif neutron_gs.startswith("lanl"):
 
             # check for a valid group structure
@@ -137,26 +163,23 @@ def get_group_structure_info(neutron_gs: str, gamma_gs: str) -> dict:
                 10 if "187" in neutron_gs else 34
 
         else:
-            raise ValueError(f"Invalid neutron group structure.")
+            raise ValueError("Invalid LANL neutron group structure.")
 
-    ##################################################
-    # Gamma group structure
-    ##################################################
-
+    # ------------------------------ define gamma NJOY input
     if gamma_gs:
 
-        # check custom
+        # custom group structures
         if gamma_gs.startswith("custom"):
             info['gamma']['gs_id'] = 1
 
             # check the custom file
-            ggs_file = f"{outdir}/{gamma_gs}g.txt"
-            if not os.path.isfile(ggs_file):
-                raise FileNotFoundError(f"{ggs_file} is not a valid file.")
-            info['gamma']['gs_file'] = ggs_file
+            g_gs_file = os.path.join(info['outdir'], f"{gamma_gs}.txt")
+            if not os.path.isfile(g_gs_file):
+                raise FileNotFoundError(f"{g_gs_file} is not a valid file.")
+            info['gamma']['gs_file'] = g_gs_file
 
-        # check lanl
-        elif gamma_gs.startswith("lanl"):
+        # lanl group structures
+        elif gamma_gs.endswith("lanl"):
 
             # check for a valid group structure
             valid_opts = [str(g) for g in [12, 24, 48]]
@@ -167,8 +190,5 @@ def get_group_structure_info(neutron_gs: str, gamma_gs: str) -> dict:
             info['gamma']['gs_id'] = \
                 3 if "12" in gamma_gs else \
                 7 if "24" in gamma_gs else 6
-
-        else:
-            raise ValueError("Invalid gamma group structure.")
 
     return info
