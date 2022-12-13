@@ -278,98 +278,98 @@ argparser.add_argument(
     If unspecified, output are given a generic name.''')
 )
 
-args = argparser.parse_args()
+argv = argparser.parse_args()
 
 ############################################################
 # Check arguments
 ############################################################
 
-if args.path_to_neutron_endf:
-    if not os.path.isfile(args.path_to_neutron_endf):
+if argv.path_to_neutron_endf:
+    if not os.path.isfile(argv.path_to_neutron_endf):
         raise FileNotFoundError(
             f"Value supplied to --path_to_neutron_endf does not "
             f"point to an existing file."
         )
 
-if args.path_to_gamma_endf:
-    if not os.path.isfile(args.path_to_gamma_endf):
+if argv.path_to_gamma_endf:
+    if not os.path.isfile(argv.path_to_gamma_endf):
         raise FileNotFoundError(
             "Value supplied to --path_to_gamma_endf does not point "
             "to an existing file."
         )
 
-if args.path_to_photoat_endf:
-    if not os.path.isfile(args.path_to_photoat_endf):
+if argv.path_to_photoat_endf:
+    if not os.path.isfile(argv.path_to_photoat_endf):
         raise FileNotFoundError(
             "Value supplied to --path_to_photoat_endf does not point "
             "to an existing file."
         )
 
-if args.path_to_sab_endf:
-    if not os.path.isfile(args.path_to_sab_endf):
-        print(args.path_to_sab_endf)
+if argv.path_to_sab_endf:
+    if not os.path.isfile(argv.path_to_sab_endf):
+        print(argv.path_to_sab_endf)
         raise FileNotFoundError(
             "Value supplied to --path_to_sab_endf does not point to "
             "an existing file."
         )
 
-if args.neutron_group_structure == 1:
-    if not args.custom_neutron_gs_file:
+if argv.neutron_group_structure == 1:
+    if not argv.custom_neutron_gs_file:
         raise ValueError(
             "When supplying 1 for --neutron_group_structure, "
             "then --custom_neutron_gs_file must be supplied."
         )
-    elif not os.path.isfile(args.custom_neutron_gs_file):
+    elif not os.path.isfile(argv.custom_neutron_gs_file):
         raise FileNotFoundError(
             "Value supplied to --custom_neutron_gs_file does not "
             "point to an existing file."
         )
 
-if args.neutron_weight_function == 1:
-    if not args.custom_neutron_wt_file:
+if argv.neutron_weight_function == 1:
+    if not argv.custom_neutron_wt_file:
         raise ValueError(
             "When supplying 1 for --neutron_weight_function, "
             "then --custom_neutron_wt_file must be supplied."
         )
-    elif not os.path.isfile(args.custom_neutron_wt_file):
+    elif not os.path.isfile(argv.custom_neutron_wt_file):
         raise FileNotFoundError(
             "Value supplied to --custom_neutron_wt_file does not "
             "point to an existing file."
         )
 
-if args.path_to_gamma_endf or args.path_to_photoat_endf:
-    if args.gamma_group_structure == 1:
-        if not args.custom_gamma_gs_file:
+if argv.path_to_gamma_endf or argv.path_to_photoat_endf:
+    if argv.gamma_group_structure == 1:
+        if not argv.custom_gamma_gs_file:
             raise ValueError(
                 "When supplying 1 for --gamma_group_structure, "
                 "then --custom_gamma_gs_file must be supplied."
             )
-        elif not os.path.isfile(args.custom_gamma_gs_file):
+        elif not os.path.isfile(argv.custom_gamma_gs_file):
             raise FileNotFoundError(
                 "Value supplied to --custom_gamma_gs_file does not "
                 "point to an existing file."
             )
 
-    if args.gamma_weight_function == 1:
-        if not args.custom_gamma_wt_file:
+    if argv.gamma_weight_function == 1:
+        if not argv.custom_gamma_wt_file:
             raise ValueError(
                 "When supplying 1 for --gamma_weight_function, "
                 "then --custom_gamma_wt_file must be supplied."
             )
-        elif not os.path.isfile(args.custom_gamma_wt_file):
+        elif not os.path.isfile(argv.custom_gamma_wt_file):
             raise FileNotFoundError(
                 "Value supplied to --custom_gamma_wt_file does not "
                 "point to an existing file."
             )
 
-if args.path_to_sab_endf:
-    if not args.inelastic_thermal_number:
+if argv.path_to_sab_endf:
+    if not argv.inelastic_thermal_number:
         raise ValueError(
             "When --path_to_sab_endf is supplied, "
             "--inelastic_thermal_number must also be supplied."
         )
 
-output_directory = os.path.abspath(args.output_directory)
+output_directory = os.path.abspath(argv.output_directory)
 output_directory = os.path.join(output_directory, "njoy")
 if not os.path.isdir(output_directory):
     warnings.warn(
@@ -377,13 +377,13 @@ if not os.path.isdir(output_directory):
         f"existing directory. Creating one at {output_directory}..."
     )
     os.makedirs(output_directory)
-output_filename = args.output_filename
+output_filename = argv.output_filename
 
-with_neutron = args.path_to_neutron_endf is not None
-with_gamma = args.path_to_gamma_endf is not None
-with_photoat = args.path_to_photoat_endf is not None
-with_sab = args.path_to_sab_endf is not None
-with_thermal = not args.no_thermal
+with_neutron = argv.path_to_neutron_endf is not None
+with_gamma = argv.path_to_gamma_endf is not None
+with_photoat = argv.path_to_photoat_endf is not None
+with_sab = argv.path_to_sab_endf is not None
+with_thermal = not argv.no_thermal
 
 ############################################################
 # Tape reservations
@@ -417,12 +417,12 @@ with_thermal = not args.no_thermal
 # Display type of problem
 ############################################################
 
-if args.path_to_neutron_endf:
-    if args.path_to_gamma_endf:
+if argv.path_to_neutron_endf:
+    if argv.path_to_gamma_endf:
         print("Neutron + Gamma Problem")
     else:
         print("Neutron only Problem")
-elif args.path_to_gamma_endf:
+elif argv.path_to_gamma_endf:
     print("Gamma only Problem")
 else:
     raise AssertionError(
@@ -433,17 +433,17 @@ else:
 # Create input tapes
 ############################################################
 
-if args.path_to_neutron_endf:
-    os.system(f"ln -fs {args.path_to_neutron_endf} tape20")
+if argv.path_to_neutron_endf:
+    os.system(f"ln -fs {argv.path_to_neutron_endf} tape20")
 
-if args.path_to_sab_endf:
-    os.system(f"ln -fs {args.path_to_sab_endf} tape50")
+if argv.path_to_sab_endf:
+    os.system(f"ln -fs {argv.path_to_sab_endf} tape50")
 
-if args.path_to_gamma_endf:
-    os.system(f"ln -fs {args.path_to_gamma_endf} tape60")
+if argv.path_to_gamma_endf:
+    os.system(f"ln -fs {argv.path_to_gamma_endf} tape60")
 
-if args.path_to_photoat_endf:
-    os.system(f"ln -fs {args.path_to_photoat_endf} tape70")
+if argv.path_to_photoat_endf:
+    os.system(f"ln -fs {argv.path_to_photoat_endf} tape70")
 
 ############################################################
 # Extract general information from ENDF files
@@ -463,7 +463,7 @@ sab_material_number = None
 sab_material_name = None
 
 # Neutron ENDF
-if args.path_to_neutron_endf:
+if argv.path_to_neutron_endf:
     with open("tape20", "r") as endf:
         for _ in range(5):
             endf.readline()
@@ -480,7 +480,7 @@ if args.path_to_neutron_endf:
               f"{neutron_material_number}")
 
 # Gamma ENDF
-if args.path_to_gamma_endf:
+if argv.path_to_gamma_endf:
     with open("tape60", "r") as endf:
         for _ in range(5):
             endf.readline()
@@ -497,7 +497,7 @@ if args.path_to_gamma_endf:
               f"{gamma_material_number}")
 
 # Photo-atomic ENDF
-if args.path_to_photoat_endf:
+if argv.path_to_photoat_endf:
     with open("tape70", "r") as endf:
         for _ in range(5):
             endf.readline()
@@ -508,7 +508,7 @@ if args.path_to_photoat_endf:
               f"{photoat_material_number}")
 
 # S(alpha, beta) ENDF
-if with_thermal and args.path_to_sab_endf:
+if with_thermal and argv.path_to_sab_endf:
     with open("tape50", "r") as endf:
         for _ in range(5):
             endf.readline()
@@ -574,7 +574,7 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
     njoy_input.write("-21 -22 -23/\n")
     njoy_input.write(f"{neutron_material_number} 1 0 0 0/\n")
     njoy_input.write("0.001/\n")
-    njoy_input.write(f"{args.temperature}/\n")
+    njoy_input.write(f"{argv.temperature}/\n")
     njoy_input.write("0/\n")
 
     if with_gamma:
@@ -582,14 +582,14 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
         njoy_input.write("-61 -62 -63/\n")
         njoy_input.write(f"{gamma_material_number} 1 0 0 0/\n")
         njoy_input.write("0.001/\n")
-        njoy_input.write(f"{args.temperature}/\n")
+        njoy_input.write(f"{argv.temperature}/\n")
         njoy_input.write("0/\n")
 
     # ============================== UNRESR inputs
     njoy_input.write("unresr\n")
     njoy_input.write("-21 -23 -24/\n")
     njoy_input.write(f"{neutron_material_number} 1 1 0/\n")
-    njoy_input.write(f"{args.temperature}/\n")
+    njoy_input.write(f"{argv.temperature}/\n")
     njoy_input.write("0.0/\n")
     njoy_input.write("0/\n")
 
@@ -617,7 +617,7 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
         njoy_input.write("221 ")  # MT for inelastic reactions
         njoy_input.write("1/\n")  # print option -- 0=min, 1=max
 
-        njoy_input.write(f"{args.temperature}/\n")  # temperatures
+        njoy_input.write(f"{argv.temperature}/\n")  # temperatures
 
         njoy_input.write("0.005 ")  # tolerance
         njoy_input.write("5.0/\n")  # maximum energy for thermal
@@ -636,11 +636,11 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
             # elastic option -- 0=none, 1=ENDF6 format
             njoy_input.write("0 ")
             njoy_input.write("0 ")  # output format
-            njoy_input.write(f"{args.inelastic_thermal_num_atoms} ")
-            njoy_input.write(f"{args.inelastic_thermal_number} ")
+            njoy_input.write(f"{argv.inelastic_thermal_num_atoms} ")
+            njoy_input.write(f"{argv.inelastic_thermal_number} ")
             njoy_input.write(f"1/\n")  # prinnt option -- 0=min, 1=max
 
-            njoy_input.write(f"{args.temperature}/\n")  # temperatures
+            njoy_input.write(f"{argv.temperature}/\n")  # temperatures
 
             njoy_input.write("0.005 ")  # tolerance
             njoy_input.write("5.0/\n")  # maximum energy for thermal
@@ -654,9 +654,9 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
                      "-21 -25 0 -28/\n")
 
     njoy_input.write(f"{neutron_material_number} ")
-    njoy_input.write(f"{args.neutron_group_structure} ")
-    njoy_input.write(f"{args.gamma_group_structure} ")
-    njoy_input.write(f"{args.neutron_weight_function} ")
+    njoy_input.write(f"{argv.neutron_group_structure} ")
+    njoy_input.write(f"{argv.gamma_group_structure} ")
+    njoy_input.write(f"{argv.neutron_weight_function} ")
     njoy_input.write("7 ")  # legendre order
     njoy_input.write("1 ")  # number of temperatures
     njoy_input.write("1 ")  # number of sigma zeros
@@ -666,26 +666,26 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
     title = f"{symbol}{mass_num}{metastable}"
     njoy_input.write(f"'{title}'/\n")  # title
 
-    njoy_input.write(f"{args.temperature}/\n")  # temperatures
+    njoy_input.write(f"{argv.temperature}/\n")  # temperatures
     njoy_input.write("0.0/\n")  # sigma zeros value
 
     # Custom neutron group structure
-    if args.neutron_group_structure == 1:
-        with open(args.custom_neutron_gs_file, "r") as wt_file:
+    if argv.neutron_group_structure == 1:
+        with open(argv.custom_neutron_gs_file, "r") as wt_file:
             for line in wt_file:
                 if line[0] != '#':
                     njoy_input.write(line)
 
     # Custom gamma group structure
-    if args.gamma_group_structure == 1:
-        with open(args.custom_gamma_gs_file, "r") as wt_file:
+    if argv.gamma_group_structure == 1:
+        with open(argv.custom_gamma_gs_file, "r") as wt_file:
             for line in wt_file:
                 if line[0] != "#":
                     njoy_input.write(line)
 
     # Custom neutron weight function
-    if args.neutron_weight_function == 1:
-        with open(args.custom_neutron_wt_file, "r") as wt_file:
+    if argv.neutron_weight_function == 1:
+        with open(argv.custom_neutron_wt_file, "r") as wt_file:
             for line in wt_file:
                 if line[0] != '#':
                     njoy_input.write(line)
@@ -697,14 +697,14 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
     if with_thermal:
         njoy_input.write("3 221 'free gas'/\n")
         if with_sab:
-            njoy_input.write(f"3 {args.inelastic_thermal_number} "
+            njoy_input.write(f"3 {argv.inelastic_thermal_number} "
                              f"'inelastic s(a,b)'/\n")
-            if args.elastic_thermal_number:
-                njoy_input.write(f"3 {args.elastic_thermal_number} "
+            if argv.elastic_thermal_number:
+                njoy_input.write(f"3 {argv.elastic_thermal_number} "
                                  f"'elastic_s(a,b)'/\n")
 
     # fission data
-    if args.fissile:
+    if argv.fissile:
         njoy_input.write("3 452 'total nubar (neutron)'/\n")
 
         njoy_input.write("3 456 'prompt nubar (neutron)'/\n")
@@ -724,11 +724,11 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
     if with_thermal:
         njoy_input.write("6 221 'free gas neutron matrix'/\n")
         if with_sab:
-            njoy_input.write(f"6 {args.inelastic_thermal_number} ")
+            njoy_input.write(f"6 {argv.inelastic_thermal_number} ")
             njoy_input.write("'inelastic s(a,b) neutron matrix'/\n")
 
-            if args.elastic_thermal_number:
-                njoy_input.write(f"6 {args.elastic_thermal_number} "
+            if argv.elastic_thermal_number:
+                njoy_input.write(f"6 {argv.elastic_thermal_number} "
                                  f"'elastic s(a,b) neutron matrix'/\n")
 
     # MF13 photon production cross-sections
@@ -746,9 +746,9 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
         njoy_input.write("-61 -63 0 -64/\n")
 
         njoy_input.write(f"{gamma_material_number} ")
-        njoy_input.write(f"{args.neutron_group_structure} ")
-        njoy_input.write(f"{args.gamma_group_structure} ")
-        njoy_input.write(f"{args.neutron_weight_function} ")
+        njoy_input.write(f"{argv.neutron_group_structure} ")
+        njoy_input.write(f"{argv.gamma_group_structure} ")
+        njoy_input.write(f"{argv.neutron_weight_function} ")
         njoy_input.write("7 ")  # legendre order
         njoy_input.write("1 ")  # number of temperatures
         njoy_input.write("1 ")  # number of sigma zeros
@@ -758,26 +758,26 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
         title = f"{symbol}{mass_num}{metastable}"
         njoy_input.write(f"'{title}'/\n")  # title
 
-        njoy_input.write(f"{args.temperature}/\n")  # temperatures
+        njoy_input.write(f"{argv.temperature}/\n")  # temperatures
         njoy_input.write("0.0/\n")  # sigma zeros value
 
         # Custom neutron group structure
-        if args.neutron_group_structure == 1:
-            with open(args.custom_neutron_gs_file, "r") as wt_file:
+        if argv.neutron_group_structure == 1:
+            with open(argv.custom_neutron_gs_file, "r") as wt_file:
                 for line in wt_file:
                     if line[0] != '#':
                         njoy_input.write(line)
 
         # Custom gamma group structure
-        if args.gamma_group_structure == 1:
-            with open(args.custom_gamma_gs_file, "r") as wt_file:
+        if argv.gamma_group_structure == 1:
+            with open(argv.custom_gamma_gs_file, "r") as wt_file:
                 for line in wt_file:
                     if line[0] != "#":
                         njoy_input.write(line)
 
         # Custom neutron weight function
-        if args.neutron_weight_function == 1:
-            with open(args.custom_neutron_wt_file, "r") as wt_file:
+        if argv.neutron_weight_function == 1:
+            with open(argv.custom_neutron_wt_file, "r") as wt_file:
                 for line in wt_file:
                     if line[0] != '#':
                         njoy_input.write(line)
@@ -787,7 +787,7 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
 
         njoy_input.write("3 257 'average energy (gamma)'/\n")
 
-        if args.fissile:
+        if argv.fissile:
             njoy_input.write("3 452 'total nubar (gamma)'/\n")
 
             njoy_input.write("3 456 'prompt nubar (gamma)'/\n")
@@ -808,23 +808,23 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
         njoy_input.write("-71 -72 0 -73/\n")
 
         njoy_input.write(f"{photoat_material_number} ")
-        njoy_input.write(f"{args.gamma_group_structure} ")
-        njoy_input.write(f"{args.gamma_weight_function} ")
+        njoy_input.write(f"{argv.gamma_group_structure} ")
+        njoy_input.write(f"{argv.gamma_weight_function} ")
         njoy_input.write("7 ")  # legendre order
         njoy_input.write("1/\n")  # print options
 
         njoy_input.write(f"'Photon Interactions'/\n")  # title
 
         # Custom gamma group structure
-        if args.gamma_group_structure == 1:
-            with open(args.custom_gamma_gs_file) as wt_file:
+        if argv.gamma_group_structure == 1:
+            with open(argv.custom_gamma_gs_file) as wt_file:
                 for line in wt_file:
                     if line[0] != "#":
                         njoy_input.write(line)
 
         # Custom gamma weight function
-        if args.gamma_weight_function == 1:
-            with open(args.custom_gamma_wt_file) as wt_file:
+        if argv.gamma_weight_function == 1:
+            with open(argv.custom_gamma_wt_file) as wt_file:
                 for line in wt_file:
                     if line[0] != "#":
                         njoy_input.write(line)
@@ -834,10 +834,10 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
     njoy_input.write("stop\n")
 
 os.system("rm -f out")
-if args.njoy_executable == "njoy21":
-    cmd_line = args.njoy_executable + " -i NJOY_INPUT.txt -o out"
+if argv.njoy_executable == "njoy21":
+    cmd_line = argv.njoy_executable + " -i NJOY_INPUT.txt -o out"
 else:
-    cmd_line = args.njoy_executable + " < NJOY_INPUT.txt"
+    cmd_line = argv.njoy_executable + " < NJOY_INPUT.txt"
 print('command line =', cmd_line)
 
 os.system(cmd_line)

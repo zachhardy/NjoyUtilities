@@ -49,8 +49,8 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        '-t', '--temperature',
-        type=float, nargs='*', default=293.6, metavar='float',
+        '-t', '--temperatures',
+        type=float, nargs='*', default=[293.6], metavar='float',
         help="The desired temperatures."
     )
 
@@ -117,150 +117,155 @@ if __name__ == "__main__":
             gs_list = gs.split('-')
             gs_info = utils.get_group_structure_info(gs_list)
 
-            output_dir = gs_info['outdir']
+            gs_outdir = gs_info['outdir']
 
             # ----------------------------------------
-            # Temperature Fix-Up
+            # Loop over temperatures
             # ----------------------------------------
 
-            if argv.temperature in [296.0, 293.6]:
-                temperature_name = "room"
-                if material_info['molecule'] == "H2O":
-                    argv.temperature = 293.6
-                elif material_info['molecule'] == "graphite":
-                    argv.temperature = 296.0
+            for temperature in argv.temperatures:
 
-            elif argv.temperature >= 0.0:
-                temperature_name = \
-                    f"{str(argv.temperature).replace('.', '_')}k"
+                if temperature in [296.0, 293.6]:
+                    temperature_name = "room"
+                    if material_info['molecule'] == "H2O":
+                        temperature = 293.6
+                    elif material_info['molecule'] == "graphite":
+                        temperature = 296.0
 
-            else:
-                raise ValueError("Temperature must be positive.")
+                elif temperature >= 0.0:
+                    temperature_name = f"{str(temperature).replace('.', '_')}k"
+                    if temperature.is_integer():
+                        temperature_name = f"{temperature_name.split('_')[0]}k"
 
-            output_dir = os.path.join(output_dir, temperature_name)
+                else:
+                    raise ValueError("Temperature must be positive.")
 
-            # ----------------------------------------
-            # Prepare Output Location
-            # ----------------------------------------
+                outdir = os.path.join(gs_outdir, temperature_name)
 
-            os.makedirs(output_dir, exist_ok=True)
-            output_dir = os.path.abspath(output_dir)
+                # ----------------------------------------
+                # Prepare Output Location
+                # ----------------------------------------
 
-            # ----------------------------------------
-            # Define Filename
-            # ----------------------------------------
+                os.makedirs(outdir, exist_ok=True)
+                outdir = os.path.abspath(outdir)
 
-            filename = material_info['symbol']
-            filename += str(material_info['mass_number'])
-            if with_thermal:
-                suffix = material_info['molecule']
-                suffix = suffix if suffix else "freegas"
-                filename = f"{filename}_{suffix}"
+                # ----------------------------------------
+                # Define Filename
+                # ----------------------------------------
 
-            # ----------------------------------------
-            # Print Summary
-            # ----------------------------------------
+                filename = material_info['symbol']
+                filename += str(material_info['mass_number'])
+                if with_thermal:
+                    suffix = material_info['molecule']
+                    suffix = suffix if suffix else "freegas"
+                    filename = f"{filename}_{suffix}"
 
-            msg = f"Processing isotope {isotope}, "
-            if molecule:
-                msg += f"molecule {molecule}, "
-            msg += f"temperature {temperature_name}..."
-            print(msg)
+                # ----------------------------------------
+                # Print Summary
+                # ----------------------------------------
 
-            # ----------------------------------------
-            # Write the Run and Process Script
-            # ----------------------------------------
-            with open("tmp.sh", "w") as f:
+                msg = f"Processing isotope {isotope}, "
+                if molecule:
+                    msg += f"molecule {molecule}, "
+                msg += f"temperature {temperature_name}..."
+                print(msg)
 
-                f.write("CWD=\"$PWD\"\n")
-                f.write("cd njoy_utilities || exit\n\n")
+                # ----------------------------------------
+                # Write the Run and Process Script
+                # ----------------------------------------
+                with open("tmp.sh", "w") as f:
 
-                # -------------------- run njoy block
-                f.write(
-                    "if [[ $1 == '0' ]] || [[ $1 == '1' ]]\n"
-                    "then\n"
-                )
+                    f.write("CWD=\"$PWD\"\n")
+                    f.write("cd njoy_utilities || exit\n\n")
 
-                njoy = f"  python njoy_runner.py \\\n" \
-                       f"  --njoy_executable=njoy21 \\\n" \
-                       f"  --temperature={argv.temperature} \\\n"
+                    # -------------------- run njoy block
+                    f.write(
+                        "if [[ $1 == '0' ]] || [[ $1 == '1' ]]\n"
+                        "then\n"
+                    )
 
-                # neutron data
-                if neutron_endf and gs_info['neutron']:
-                    njoy += f"  --path_to_neutron_endf={neutron_endf} \\\n"
+                    njoy = f"  python njoy_runner.py \\\n" \
+                           f"  --njoy_executable=njoy21 \\\n" \
+                           f"  --temperature={temperature} \\\n"
 
-                    # add group structure info
-                    neutron_gs = gs_info['neutron']['gs_id']
-                    njoy += f"  --neutron_group_structure={neutron_gs} \\\n"
+                    # neutron data
+                    if neutron_endf and gs_info['neutron']:
+                        njoy += f"  --path_to_neutron_endf={neutron_endf} \\\n"
+
+                        # add group structure info
+                        neutron_gs = gs_info['neutron']['gs_id']
+                        njoy += f"  --neutron_group_structure={neutron_gs} \\\n"
 
                     # add custom group structure file
                     if neutron_gs == 1:
                         neutron_gs_file = gs_info['neutron']['gs_file']
                         njoy += f"  --custom_neutron_gs_file={neutron_gs_file} \\\n"
 
-                # gamma/photo-atomic data
-                if gs_info['gamma']:
-                    if gamma_endf:
-                        njoy += f"  --path_to_gamma_endf={gamma_endf} \\\n"
-                    if photoat_endf:
-                        njoy += f"  --path_to_photoat_endf={photoat_endf} \\\n"
-                    if not gamma_endf and not photoat_endf:
-                        continue
+                    # gamma/photo-atomic data
+                    print(gs_info['gamma'])
+                    if gs_info['gamma']:
+                        if not gamma_endf and not photoat_endf:
+                            continue
 
-                    # gamma group structure
-                    gamma_gs = gs_info['gamma']['gs_id']
-                    njoy += f"  --gamma_group_structure={gamma_gs} \\\n"
+                        if gamma_endf:
+                            njoy += f"  --path_to_gamma_endf={gamma_endf} \\\n"
+                        if photoat_endf:
+                            njoy += f"  --path_to_photoat_endf={photoat_endf} \\\n"
 
-                    # add custom group structure file
-                    if gamma_gs == 1:
-                        gamma_gs_file = gs_info['gamma']['gs_file']
-                        njoy += f"  --custom_gamma_gs_file={gamma_gs_file} \\\n"
+                        # gamma group structure
+                        gamma_gs = gs_info['gamma']['gs_id']
+                        njoy += f"  --gamma_group_structure={gamma_gs} \\\n"
 
-                # thermal scattering data
-                if sab_info:
-                    sab_endf = sab_info['sab_endf']
-                    njoy += f"  --path_to_sab_endf={sab_endf} \\\n"
+                        # add custom group structure file
+                        if gamma_gs == 1:
+                            gamma_gs_file = gs_info['gamma']['gs_file']
+                            njoy += f"  --custom_gamma_gs_file={gamma_gs_file} \\\n"
 
-                    # add inelastic thermal scattering
-                    mti = sab_info['mti']
-                    njoy += f"  --inelastic_thermal_number={mti} \\\n"
+                    # thermal scattering data
+                    if sab_info:
+                        sab_endf = sab_info['sab_endf']
+                        njoy += f"  --path_to_sab_endf={sab_endf} \\\n"
 
-                    # add elastic thermal scattering
-                    if "mtc" in sab_info:
-                        mtc = sab_info['mtc']
-                        njoy += f"  --elastic_thermal_number={mtc} \\\n"
+                        # add inelastic thermal scattering
+                        mti = sab_info['mti']
+                        njoy += f"  --inelastic_thermal_number={mti} \\\n"
 
-                    # add the number of principal atoms
-                    n_atoms = sab_info['n_atoms']
-                    njoy += f"  --inelastic_thermal_num_atoms={n_atoms} \\\n"
+                        # add elastic thermal scattering
+                        if "mtc" in sab_info:
+                            mtc = sab_info['mtc']
+                            njoy += f"  --elastic_thermal_number={mtc} \\\n"
 
-                # fission flag
-                if material_info['atomic_number'] >= 90:
-                    njoy += "  --fissile \\\n"
+                        # add the number of principal atoms
+                        n_atoms = sab_info['n_atoms']
+                        njoy += f"  --inelastic_thermal_num_atoms={n_atoms} \\\n"
 
-                # output data
-                njoy += f"  --output_directory={output_dir} \\\n"
-                njoy += f"  --output_filename={filename}.njoy\n\n"
+                    # fission flag
+                    if material_info['atomic_number'] >= 90:
+                        njoy += "  --fissile \\\n"
 
-                f.write(njoy)
-                f.write("fi\n\n")
+                    # output data
+                    njoy += f"  --output_directory={outdir} \\\n"
+                    njoy += f"  --output_filename={filename}.njoy\n\n"
 
-                # -------------------- processor block
-                f.write(
-                    "if [[ $1 == '0' ]] || [[ $1 == '2' ]]\n"
-                    "then\n"
-                )
+                    f.write(njoy)
+                    f.write("fi\n\n")
 
-                process = f"  python3 njoy_processor.py \\\n" \
-                          f"  --output_directory={output_dir} \\\n" \
-                          f"  --njoy_output_filename={filename}.njoy \\\n" \
-                          f"  --xs_filename={filename}.xs"
-                process += f"  \\\n  --plot\n\n" if argv.plot else "\n\n"
+                    # -------------------- processor block
+                    f.write(
+                        "if [[ $1 == '0' ]] || [[ $1 == '2' ]]\n"
+                        "then\n"
+                    )
 
-                f.write(process)
-                f.write("fi\n")
+                    process = f"  python3 njoy_processor.py \\\n" \
+                              f"  --output_directory={outdir} \\\n" \
+                              f"  --njoy_output_filename={filename}.njoy \\\n" \
+                              f"  --xs_filename={filename}.xs"
+                    process += f"  \\\n  --plot\n\n" if argv.plot else "\n\n"
 
-                f.write("cd \"$CWD\" || exit\n")
+                    f.write(process)
+                    f.write("fi\n")
 
-            os.system(f"source tmp.sh {argv.option}")
-            os.system("rm -f tmp.sh")
+                    f.write("cd \"$CWD\" || exit\n")
+
+                os.system(f"source tmp.sh {argv.option}")
+                os.system("rm -f tmp.sh")

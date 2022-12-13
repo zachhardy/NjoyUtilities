@@ -163,7 +163,7 @@ def get_group_structure_info(group_structures: list[str]) -> dict:
                 10 if "187" in neutron_gs else 34
 
         else:
-            raise ValueError("Invalid LANL neutron group structure.")
+            raise ValueError("Invalid neutron group structure.")
 
     # ------------------------------ define gamma NJOY input
     if gamma_gs:
@@ -179,7 +179,7 @@ def get_group_structure_info(group_structures: list[str]) -> dict:
             info['gamma']['gs_file'] = g_gs_file
 
         # lanl group structures
-        elif gamma_gs.endswith("lanl"):
+        elif gamma_gs.startswith("lanl"):
 
             # check for a valid group structure
             valid_opts = [str(g) for g in [12, 24, 48]]
@@ -190,5 +190,8 @@ def get_group_structure_info(group_structures: list[str]) -> dict:
             info['gamma']['gs_id'] = \
                 3 if "12" in gamma_gs else \
                 7 if "24" in gamma_gs else 6
+
+        else:
+            raise ValueError("Invalid gamma group structure.")
 
     return info

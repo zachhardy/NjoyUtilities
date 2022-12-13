@@ -56,10 +56,8 @@ def process_group_structure(
     -------
     list[list]
     """
-    # go to next line
-    n += 1
+    # next line until first entry is found
     words = lines[n].split()
-
     while not words or words[0] != "1":
         n += 1
         words = lines[n].split()
@@ -101,12 +99,12 @@ def process_cross_section(
     -------
     A table containing the group wise xs.
     """
-    # skip header
-    add_skip = 1 if "particle emission" in lines[n + 1] else 0
-
-    # get first line of cross-section
-    n += header_size + add_skip
+    # go to first line of data
+    n += 1 if "particle emission" in lines[n + 1] else 0
+    n += header_size
     words = lines[n].split()
+
+    # if no data, return empty
     if len(words) == 0:
         return []
 
@@ -146,15 +144,14 @@ def process_prompt_chi(
     -------
     A table containing the group-wise xs.
     """
-    # skip header
+    # go to first line of data
+    n += 2 if "spectrum constant" in lines[n + 2] else 0
     n += header_size
     words = lines[n].split()
 
+    # parse the data
     spec = []
     while len(words) >= 2:
-        if not words[0].isdigit():
-            n += 2
-            words = lines[n].split()
 
         group = int(words[0]) - 1
         for number_word in words[1:]:
@@ -183,8 +180,8 @@ def process_decay_constants(
     -------
     A table containing delayed neutron group decay constants.
     """
-    # skip header
-    n += 3 if lines[n + 2].startswith("normalized") else 5
+    # go to first line of data
+    n += 5 if "spectrum constant" in lines[n + 2] else 3
     words = lines[n].split()
     if words[0] != "group":
         raise AssertionError("Unexpected line encountered.")
@@ -211,8 +208,8 @@ def process_delayed_chi(
     A table containing the group wise delayed  neutron precursor
         spectrum coefficients.
     """
-    # skip header
-    n += 5 if lines[n + 2].startswith("normalized") else 7
+    # go to first line of data
+    n += 7 if "spectrum constant" in lines[n + 2] else 5
     words = lines[n].split()
 
     # parse the data
@@ -246,9 +243,13 @@ def process_transfer_matrix(
     -------
     A table containing the group wise transfer coefficients.
     """
-    # skip header
-    n += 1 if "mf26" in lines[n] else 0
-    n += 2 if "spectrum constant" not in lines[n + 2] else 4
+    # go to the first line of informative data
+    skip = 1 if "mf26" in lines[n] else 0
+    skip += 1 if "particle emission" in lines[n + 1] else 0
+    skip += 4 if "spectrum constant" in lines[n + 2] else 2
+    n += skip
+
+    # determine matrix type
     if "legendre" in lines[n]:
         matrix_type = "legendre"
     elif "isotropic" in lines[n]:
@@ -261,6 +262,12 @@ def process_transfer_matrix(
     # parse the data
     matrix = []
     while len(words) >= 2:
+
+        # In fission matrices, there are lines with
+        # `spec` and `prod`, and in some gamma matrices there are lines
+        # with `xs` and `heat`. The try/except block ensures that these
+        # lines are safely passed over without having to explicitly
+        # hard-code the words to skip
         try:
             gprime = int(words[0]) - 1
             group = int(words[1]) - 1
