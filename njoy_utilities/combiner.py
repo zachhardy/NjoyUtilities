@@ -1,38 +1,39 @@
-"""Combines NJOY raw data into comprehensible transport data"""
+"""
+Combines NJOY raw data into comprehensible transport data.
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 
-# ====================================================================
+################################################################################
 def build_combined_data(
         raw_njoy_data: dict,
         plot: bool = False
 ) -> tuple[dict, dict]:
-    """Combines enjoy raw data into a dictionary of vectors and matrices."""
+    """
+    Combines enjoy raw data into a dictionary of vectors and matrices.
+    """
 
-    ############################################################
-    # Get dictionaries
-    ############################################################
+    # -------------------------------------------------- raw njoy data
 
     group_structures: dict = raw_njoy_data["group_structures"]
     cross_sections: dict = raw_njoy_data["cross_sections"]
     transfer_matrices: dict = raw_njoy_data["transfer_matrices"]
 
-    ############################################################
-    # Determine number of groups
-    ############################################################
+    # -------------------------------------------------- number of groups
 
-    n_gs = group_structures["neutron"] if "neutron" in group_structures else []
-    g_gs = group_structures["gamma"] if "gamma" in group_structures else []
+    n_gs, g_gs = [], []
+    if "neutron" in group_structures:
+        n_gs = group_structures["neutron"]
+    if "gamma" in group_structures:
+        g_gs = group_structures["gamma"]
 
     G_n = len(n_gs)
     G_g = len(g_gs)
     G = G_n + G_g
 
-    ############################################################
-    # Get the problem type
-    ############################################################
+    # -------------------------------------------------- problem type
 
     problem_description = {}
     if n_gs:
@@ -50,9 +51,7 @@ def build_combined_data(
     problem_description["G_n"] = G_n
     problem_description["G_g"] = G_g
 
-    ############################################################
-    # Total interaction cross-sections
-    ############################################################
+    # -------------------------------------------------- total xs
 
     sig_t = np.zeros(G)
 
@@ -68,9 +67,7 @@ def build_combined_data(
             g, v = entry
             sig_t[G - g - 1] = v
 
-    ############################################################
-    # Heating cross-sections
-    ############################################################
+    # -------------------------------------------------- heating xs
 
     sig_heat = np.zeros(G)
 
@@ -86,9 +83,7 @@ def build_combined_data(
             g, v = entry
             sig_heat[G - g - 1] = v
 
-    ############################################################
-    # Cross-particle cross-sections
-    ############################################################
+    # -------------------------------------------------- capture xs
 
     sig_x = np.zeros(G)
 
@@ -104,9 +99,7 @@ def build_combined_data(
             g, v = entry
             sig_x[G - g - 1] = v
 
-    ############################################################
-    # Scattering cross-sections
-    ############################################################
+    # -------------------------------------------------- scattering xs
 
     sig_el = np.zeros(G)
     if "(n,elastic)" in cross_sections:
@@ -179,9 +172,7 @@ def build_combined_data(
             v = entry[1]
             sig_pairprod[G - g - 1] += v
 
-    ############################################################
-    # Other data
-    ############################################################
+    # ------------------------------------------------- auxiliary data
 
     inv_v = np.zeros(G)
     if "inverse velocity" in cross_sections:
@@ -190,26 +181,24 @@ def build_combined_data(
             g, v = entry
             inv_v[G_n - g - 1] = v
 
-    E_avg = np.zeros(G)
+    e_avg = np.zeros(G)
     for particle in ['neutron', 'gamma']:
         ref = G_n if particle == 'neutron' else G_n + G_g
         if f"average energy ({particle})" in cross_sections:
             data = cross_sections[f"average energy ({particle})"]
             for entry in data:
                 g, v = entry
-                E_avg[ref - g - 1] = v * 1.0e-6
+                e_avg[ref - g - 1] = v * 1.0e-6
 
     # if gamma groups are used but average energies were not parsed
     # use the average of the photon group bounds
-    if G_g > 0 and np.sum(E_avg[G_n:]) == 0.0:
+    if G_g > 0 and np.sum(e_avg[G_n:]) == 0.0:
         e_bounds = group_structures["gamma"]
         for entry in e_bounds:
             g, elow, ehigh = entry
-            E_avg[G - g - 1] = 0.5 * (elow + ehigh)
+            e_avg[G - g - 1] = 0.5 * (elow + ehigh)
 
-    ############################################################
-    # Fission terms
-    ############################################################
+    # -------------------------------------------------- fission data
 
     sig_f = np.zeros(G)
 
@@ -228,8 +217,13 @@ def build_combined_data(
     nu_total = np.zeros(G)
     nu_prompt = np.zeros(G)
     nu_delayed = np.zeros(G)
+
     chi_prompt = {"neutron": np.zeros(G_n),
                   "gamma": np.zeros(G_n)}
+
+    decay_const = {"neutron": [], "gamma": []}
+    precursor_fraction = {"neutron": [], "gamma": []}
+    chi_delayed = {"neutron": [], "gamma": []}
 
     for particle in ["neutron", "gamma"]:
         ref = G_n if particle == "neutron" else G
@@ -257,41 +251,30 @@ def build_combined_data(
             for entry in data:
                 g, v = entry
                 chi_prompt[particle][G_n - g - 1] = v
+            chi_prompt[particle] /= sum(chi_prompt[particle])
 
-    ############################################################
-    # Delayed neutron data
-    ############################################################
+        if f"decay constants ({particle})" in cross_sections:
+            data = cross_sections[f"decay constants ({particle})"]
+            lambdas = np.array([entry[1] for entry in data])
+            decay_const[particle] = lambdas
 
-    decay_const = []
-    if "decay constants" in cross_sections:
-        data = cross_sections["decay constants"]
-        decay_const = np.array([entry[1] for entry in data])
-    J = len(decay_const)  # number of precursor groups
-
-    chi_delayed = {"neutron": np.zeros((G_n, J)),
-                   "gamma": np.zeros((G_n, J))}
-    for particle in ["neutron", "gamma"]:
-        if f"delayed chi ({particle})" in cross_sections:
+            # get chi delayed
+            chi_delayed[particle] = np.zeros((G_n, len(lambdas)))
             data = cross_sections[f"delayed chi ({particle})"]
             for entry in data:
                 g, v = entry[0], entry[1:]
                 chi_delayed[particle][G_n - g - 1] = v
 
-    precursor_fraction = {"neutron": np.zeros(J),
-                          "gamma": np.zeros(J)}
-    for particle in ["neutron", "gamma"]:
-        if np.sum(chi_delayed[particle]) > 0:
-            precursor_fraction[particle] = \
-                np.sum(chi_delayed[particle], axis=0)
+            # compute yield fractions
+            frac = np.sum(chi_delayed[particle], axis=0)
+            precursor_fraction[particle] = frac
 
+            # normalize chi delayed
             chi_delayed[particle] /= precursor_fraction[particle]
 
-    ############################################################
-    # Reconcile cross-sections
-    ############################################################
+    # -------------------------------------------------- reconciliation
 
     # compute the total scattering cross-section
-    # note this excludes in
     sig_s = np.zeros(G)
     sig_s[:G_n] = sig_el[:G_n] + sig_inel[:G_n]
     sig_s[G_n:] = sig_coht[G_n:] + sig_incoht[G_n:]
@@ -299,18 +282,14 @@ def build_combined_data(
     # the absorption is given by the total minus scattering
     sig_a = sig_t - sig_s
 
-    ############################################################
-    # Compute the maximum number of scattering moments
-    ############################################################
+    # -------------------------------------------------- number of moments
 
     M = 0
     for particle, transfers in transfer_matrices.items():
         for rxn_type, data in transfers.items():
             M = max(M, len(data[0][2])) if data else M
 
-    ############################################################
-    # Define the thermal cutoff group
-    ############################################################
+    # -------------------------------------------------- find thermal cutoff
 
     thermal_rxns = []
     for key in transfer_matrices["neutron"].keys():
@@ -326,11 +305,9 @@ def build_combined_data(
         if data:
             n_therm = max(n_therm, max(max(*row[:2]) for row in data))
 
-    ############################################################
-    # Functions to add data to transfer matrices
-    ############################################################
+    # -------------------------------------------------- utility functions
 
-    # =======================================
+    ############################################################
     # Lambda-ish to add neutron data
     # Always operates on transfer_mats
     def add_transfer_neutron(data_values, dst, offset=0):
@@ -343,7 +320,7 @@ def build_combined_data(
                 val = data_value[2][moment]
                 dst[moment][gprime][group] += val
 
-    # =======================================
+    ############################################################
     # Lambda-ish to add gamma data
     # Always operates on transfer_mats
     def add_transfer_gamma(data_values, dst, offset=0):
@@ -358,11 +335,10 @@ def build_combined_data(
                 val = data_value[2][moment]
                 dst[moment][gprime][group] += val
 
-    ############################################################
-    # Initialize transfer matrices with all non-thermal data
-    ############################################################
+    # -------------------------------------------------- scattering matrices
+    # include all scattering except for thermal
 
-    transfer_mats = np.zeros((M, G, G))
+    scattering_mats = np.zeros((M, G, G))
     for particle, transfers in transfer_matrices.items():
         for rxn_type, data in transfers.items():
 
@@ -373,19 +349,17 @@ def build_combined_data(
 
             if particle == "neutron":
                 if "n," in rxn_type:
-                    add_transfer_neutron(data, transfer_mats)
+                    add_transfer_neutron(data, scattering_mats)
                 elif "g," in rxn_type:
-                    add_transfer_neutron(data, transfer_mats, offset=G_g)
+                    add_transfer_neutron(data, scattering_mats, offset=G_g)
 
             elif particle == "gamma":
                 if "g," in rxn_type:
-                    add_transfer_gamma(data, transfer_mats)
+                    add_transfer_gamma(data, scattering_mats)
                 elif "n," in rxn_type:
-                    add_transfer_gamma(data, transfer_mats, offset=G_n)
+                    add_transfer_gamma(data, scattering_mats, offset=G_n)
 
-    ############################################################
-    # Apply thermal data
-    ############################################################
+    # -------------------------------------------------- apply thermal treatment
 
     if thermal_rxns and n_therm >= -1:
 
@@ -399,14 +373,14 @@ def build_combined_data(
         elastic = np.zeros((M, G, G))
         add_transfer_neutron(nn_transfers["(n,elastic)"], elastic)
         elastic = elastic[:, bgn:end, bgn:end]
-        transfer_mats[:, bgn:end, bgn:end] -= elastic
+        scattering_mats[:, bgn:end, bgn:end] -= elastic
 
         # add thermal treatment to the transfer matrix
         thermal = np.zeros((M, G, G))
         for rxn_type in thermal_rxns:
             add_transfer_neutron(nn_transfers[rxn_type], thermal)
         thermal = thermal[:, bgn:end, bgn:end]
-        transfer_mats[:, bgn:end, bgn:end] += thermal
+        scattering_mats[:, bgn:end, bgn:end] += thermal
 
         # apply thermal treatment to toal scattering
         sig_s[bgn:end] = sig_therm[bgn:end]
@@ -415,27 +389,23 @@ def build_combined_data(
         # from absorption and thermal scattering
         sig_t[bgn:end] = sig_a[bgn:end] + sig_s[bgn:end]
 
-    ############################################################
-    # Determine sparsity of the transfer matrices
-    ############################################################
+    # -------------------------------------------------- compute sparsity
 
-    transfer_mats_nonzeros = []
+    scattering_mats_sparsity = []
     for m in range(0, M):
         mat_non_zeros = []
         for gp in range(0, G):
             non_zeros = []
             for g in range(0, G):
-                if np.abs(transfer_mats[m][gp, g]) > 1.0e-16:
+                if np.abs(scattering_mats[m][gp, g]) > 1.0e-16:
                     non_zeros.append(g)
             mat_non_zeros.append(non_zeros)
-        transfer_mats_nonzeros.append(mat_non_zeros)
+        scattering_mats_sparsity.append(mat_non_zeros)
 
-    ############################################################
-    # Plotting
-    ############################################################
+    # -------------------------------------------------- plotting
 
     if plot:
-        Atest = np.copy(transfer_mats[0])
+        Atest = np.copy(scattering_mats[0])
         nz = np.nonzero(Atest)
         Atest[nz] = np.log10(Atest[nz]) + 10.0
 
@@ -476,21 +446,21 @@ def build_combined_data(
             # general
             change = np.max(sig_t[:G_n]) / np.min(sig_t[:G_n])
             plotter = ax[0].semilogx if change < 100.0 else ax[0].loglog
-            plotter(E_avg[:G_n], sig_t[:G_n], label=r"$\sigma_t$")
-            plotter(E_avg[:G_n], sig_a[:G_n], label=r"$\sigma_a$")
-            plotter(E_avg[:G_n], sig_f[:G_n], label=r"$\sigma_f$")
-            plotter(E_avg[:G_n], sig_s[:G_n], label=r"$\sigma_s$")
+            plotter(e_avg[:G_n], sig_t[:G_n], label=r"$\sigma_t$")
+            plotter(e_avg[:G_n], sig_a[:G_n], label=r"$\sigma_a$")
+            plotter(e_avg[:G_n], sig_f[:G_n], label=r"$\sigma_f$")
+            plotter(e_avg[:G_n], sig_s[:G_n], label=r"$\sigma_s$")
             ax[0].legend()
             ax[0].grid(True)
 
             # scattering
             change = np.max(sig_s[:G_n]) / np.min(sig_s[:G_n])
             plotter = ax[1].semilogx if change < 100.0 else ax[1].semilogx
-            plotter(E_avg[:G_n], sig_s[:G_n], label=r"$\sigma_s$")
-            plotter(E_avg[:G_n], sig_el[:G_n], label=r"$\sigma_{el}$")
-            plotter(E_avg[:G_n], sig_inel[:G_n], label=r"$\sigma_{inel}$")
+            plotter(e_avg[:G_n], sig_s[:G_n], label=r"$\sigma_s$")
+            plotter(e_avg[:G_n], sig_el[:G_n], label=r"$\sigma_{el}$")
+            plotter(e_avg[:G_n], sig_inel[:G_n], label=r"$\sigma_{inel}$")
             if sum(sig_therm) > 0.0:
-                plotter(E_avg[:G_n], sig_therm[:G_n], label=r"$\sigma_{therm}$")
+                plotter(e_avg[:G_n], sig_therm[:G_n], label=r"$\sigma_{therm}$")
             ax[1].legend()
             ax[1].grid(True)
 
@@ -505,14 +475,14 @@ def build_combined_data(
                     iax.set_ylabel("$\chi$ (MeV$^{-1}$)" if i == 0 else
                                    "Neutrons Per Fission")
 
-                ax[0].semilogx(E_avg[:G_n], chi_prompt["neutron"])
+                ax[0].semilogx(e_avg[:G_n], chi_prompt["neutron"])
                 ax[0].grid(True)
 
-                line0, = ax[1].semilogx(E_avg[:G_n], nu_total[:G_n], "b")
-                line1, = ax[1].semilogx(E_avg[:G_n], nu_prompt[:G_n], "r")
+                line0, = ax[1].semilogx(e_avg[:G_n], nu_total[:G_n], "b")
+                line1, = ax[1].semilogx(e_avg[:G_n], nu_prompt[:G_n], "r")
 
                 twin_ax = ax[1].twinx()
-                line2, = twin_ax.semilogx(E_avg[:G_n], nu_delayed[:G_n], "g")
+                line2, = twin_ax.semilogx(e_avg[:G_n], nu_delayed[:G_n], "g")
                 twin_ax.set_ylabel("Delayed Neutrons Per Fission")
 
                 lines = [line0, line1, line2]
@@ -528,10 +498,10 @@ def build_combined_data(
             plt.figure()
             plt.xlabel("Energy (MeV)")
             plt.ylabel("Cross-Section (b)")
-            plt.semilogx(E_avg[G_n:], sig_t[G_n:], label=r"$\sigma_t$")
-            plt.semilogx(E_avg[G_n:], sig_a[G_n:], label=r"$\sigma_a$")
-            plt.semilogx(E_avg[G_n:], sig_x[G_n:], label=r"$\sigma_x$")
-            plt.semilogx(E_avg[G_n:], sig_s[G_n:], label=r"$\sigma_s$")
+            plt.semilogx(e_avg[G_n:], sig_t[G_n:], label=r"$\sigma_t$")
+            plt.semilogx(e_avg[G_n:], sig_a[G_n:], label=r"$\sigma_a$")
+            plt.semilogx(e_avg[G_n:], sig_x[G_n:], label=r"$\sigma_x$")
+            plt.semilogx(e_avg[G_n:], sig_s[G_n:], label=r"$\sigma_s$")
             plt.legend()
             plt.grid(True)
 
@@ -548,14 +518,14 @@ def build_combined_data(
                     iax.set_ylabel("$\chi$ (MeV$^{-1}$)" if i == 0 else
                                    r"Neutrons Per Fission")
 
-                ax[0].semilogx(E_avg[:G_n], chi_prompt["gamma"])
+                ax[0].semilogx(e_avg[:G_n], chi_prompt["gamma"])
                 ax[0].grid(True)
 
-                line0, = ax[1].semilogx(E_avg[G_n:], nu_total[G_n:], "b")
-                line1, = ax[1].semilogx(E_avg[G_n:], nu_prompt[G_n:], "r")
+                line0, = ax[1].semilogx(e_avg[G_n:], nu_total[G_n:], "b")
+                line1, = ax[1].semilogx(e_avg[G_n:], nu_prompt[G_n:], "r")
 
                 twin_ax = ax[1].twinx()
-                line2, = twin_ax.semilogx(E_avg[G_n:], nu_delayed[G_n:], "g")
+                line2, = twin_ax.semilogx(e_avg[G_n:], nu_delayed[G_n:], "g")
                 twin_ax.set_ylabel("Delayed Neutrons Per Fission")
 
                 lines = [line0, line1, line2]
@@ -568,9 +538,9 @@ def build_combined_data(
 
         plt.show()
 
-    ############################################################
+    ###########################################################################
     # Build return data
-    ############################################################
+    ###########################################################################
 
     return_data = {"neutron_gs": n_gs,
                    "gamma_gs": g_gs,
@@ -590,7 +560,8 @@ def build_combined_data(
                    "decay_constants": decay_const,
                    "precursor_fraction": precursor_fraction,
                    "inv_velocity": inv_v,
-                   "avg_energy": E_avg,
-                   "transfer_matrices": transfer_mats,
-                   "transfer_matrices_sparsity": transfer_mats_nonzeros}
+                   "avg_energy": e_avg,
+                   "scattering_matrices": scattering_mats,
+                   "scattering_matrices_sparsity": scattering_mats_sparsity}
+
     return return_data, problem_description

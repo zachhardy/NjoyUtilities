@@ -14,18 +14,14 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
     pass
 
 
-############################################################
-# Check Python version
-############################################################
+# -------------------------------------------------- check python version
 
 if sys.version_info[0] < 3:
     print("\n Error: This script requires python3 but was executed "
           "with version:\n\n"+sys.version+"\n")
     sys.exit(1)
 
-############################################################
-# Setup parsers
-############################################################
+# -------------------------------------------------- create parser
 
 argparser = argparse.ArgumentParser(
     description="Executes the main steps of conversion",
@@ -69,9 +65,7 @@ if not os.path.isdir(output_directory):
     )
     os.makedirs(output_directory)
 
-############################################################
-# Read NJOY output
-############################################################
+# -------------------------------------------------- read njoy output
 
 njoy_output_path = os.path.join(
     output_directory, "njoy", argv.njoy_output_filename
@@ -82,9 +76,7 @@ raw_njoy_data = read_njoy_outputs.read_njoy_file(
     njoy_output_path, verbose=True
 )
 
-############################################################
-# Combine disjoint data
-############################################################
+# -------------------------------------------------- combine disjoint data
 
 print("\nCombining disjoint data...")
 
@@ -100,9 +92,7 @@ print(f"\nProblem Description:")
 for key, val in problem_description.items():
     print(f"{key:<15}: {val}")
 
-############################################################
-# Write cross-section file in Chi format
-############################################################
+# -------------------------------------------------- Write cross-section file
 
 if len(argv.xs_filename) == 0:
     # generate name automatically
@@ -123,9 +113,7 @@ xs_writer.write_xs_file(
     data, xs_output_path, problem_description
 )
 
-############################################################
-# If plots were saved, move them
-############################################################
+# -------------------------------------------------- Move plots
 
 if argv.plot:
     import os

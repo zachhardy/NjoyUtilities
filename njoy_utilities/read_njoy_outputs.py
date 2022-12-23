@@ -10,13 +10,13 @@ RawDelayedChi = list[tuple[int, list[float]]]
 RawTransferMatrix = list[tuple[int, int, list[float]]]
 
 
-######################################################################
+###############################################################################
 def print_line(line_num: int, line: str) -> None:
     """ Prints a file line without the line feed. """
     print("Line: ", line_num, line, end='')
 
 
-######################################################################
+###############################################################################
 def string_to_float(string: str) -> float:
     """
     Convert a float string to a float.
@@ -39,7 +39,7 @@ def string_to_float(string: str) -> float:
     return float(number)
 
 
-######################################################################
+###############################################################################
 def process_group_structure(
         n: int,
         lines: list[str]
@@ -76,7 +76,7 @@ def process_group_structure(
     return group_struct
 
 
-######################################################################
+###############################################################################
 def process_cross_section(
         n: int,
         lines: list[str],
@@ -121,7 +121,7 @@ def process_cross_section(
     return xs
 
 
-######################################################################
+###############################################################################
 def process_prompt_chi(
         n: int,
         lines: list[str],
@@ -155,7 +155,7 @@ def process_prompt_chi(
     return spec
 
 
-######################################################################
+###############################################################################
 def process_decay_constants(
         n: int,
         lines: list[str]
@@ -182,7 +182,7 @@ def process_decay_constants(
     return [StringToFloat(val) for val in words[1:]]
 
 
-######################################################################
+###############################################################################
 def process_delayed_chi(
         n: int,
         lines: list[str]
@@ -216,7 +216,7 @@ def process_delayed_chi(
     return matrix
 
 
-######################################################################
+###############################################################################
 def process_transfer_matrix(
         n: int,
         lines: list[str],
@@ -286,7 +286,7 @@ def process_transfer_matrix(
     return matrix
 
 
-######################################################################
+###############################################################################
 def read_njoy_file(
         njoy_filename: str = "output",
         verbose: bool = False
@@ -328,9 +328,7 @@ def read_njoy_file(
             words = file_lines[line_num].split()
             num_words = len(words)
 
-            ##################################################
-            # group-structures
-            ##################################################
+            # ---------------------------------------- group structures
 
             if "sigma zeroes" in line:
                 group_structures["neutron"] = \
@@ -342,9 +340,7 @@ def read_njoy_file(
                         process_group_structure(line_num, file_lines)
                     flag_gamma_structure_processed = True
 
-            ##################################################
-            # reactions
-            ##################################################
+            # ---------------------------------------- reactions
 
             if line.startswith("for mf") and "mt" in line:
 
@@ -357,9 +353,7 @@ def read_njoy_file(
                     mf = int(words[1].strip("mf"))
                     mt = int(words[3].strip("mt"))
 
-                ######################################################
-                # cross sections
-                ######################################################
+                # ------------------------------ standard xs data
 
                 if line.endswith("cross section"):
 
@@ -381,9 +375,7 @@ def read_njoy_file(
                         cross_sections[rxn_type] = \
                             process_cross_section(line_num, file_lines)
 
-                ######################################################
-                # other cross-sections
-                ######################################################
+                # ------------------------------ auxiliary data
 
                 mtnames = ["inverse velocity", "average energy",
                            "free gas", "inelastic s(a,b)", "elastic s(a,b)",
@@ -396,9 +388,7 @@ def read_njoy_file(
                             cross_sections[rxn_type] = \
                                 process_cross_section(line_num, file_lines)
 
-                ######################################################
-                # prompt/delayed fission data
-                ######################################################
+                # ------------------------------ fission data
 
                 # prompt fission spectrum
                 if mf == 5 and "prompt chi" in line:
@@ -414,9 +404,7 @@ def read_njoy_file(
                     cross_sections[rxn_type] = \
                         process_delayed_chi(line_num, file_lines)
 
-                ######################################################
-                # neutron transfer matrix data
-                ######################################################
+                # ------------------------------ transfer matrices
 
                 # caveat:
                 #   the pp values from transfer(mf26) = 2x the pp
@@ -439,9 +427,7 @@ def read_njoy_file(
                     transfer_matrices[particle_type][rxn_type] = \
                         process_transfer_matrix(line_num, file_lines)
 
-                ######################################################
-                # photo-atomic cross-section data
-                ######################################################
+                # ------------------------------ photo-atomic cross-sections
 
                 # Total photon interaction
                 if mf == 23 and mt == 501:
@@ -474,9 +460,7 @@ def read_njoy_file(
                     cross_sections["(g,heat)"] = \
                         process_cross_section(line_num, file_lines)
 
-                ######################################################
-                # photo-atomic transfer matrix data
-                ######################################################
+                # ------------------------------ photo-atomic transfer matrices
 
                 if mf == 26 and mt == 502:
                     transfer_matrices["gamma"]["(g,coherent)"] = \
