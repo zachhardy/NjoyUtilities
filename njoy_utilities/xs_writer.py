@@ -38,15 +38,15 @@ def write_xs_file(data, full_path, problem_description):
         inv_velocity = data["inv_velocity"]
         E_avg = data["avg_energy"]
 
-        transfer_mats = data["transfer_matrices"]
-        transfer_mats_nonzeros = data["transfer_matrices_sparsity"]
+        transfer_mats = data["scattering_matrices"]
+        transfer_mats_nonzeros = data["scattering_matrices_sparsity"]
 
         neutron_gs = data["neutron_gs"]
         gamma_gs = data["gamma_gs"]
 
         G = n_group + g_group
         M = len(transfer_mats)
-        J = len(decay_const)
+        J = len(decay_const['neutron'])
 
         xsf.write("# Output\n")
         xsf.write(f"NUM_GROUPS {G}\n")
@@ -144,12 +144,14 @@ def write_xs_file(data, full_path, problem_description):
         if J > 0:
             xsf.write("PRECURSOR_LAMBDA_BEGIN\n")
             for j in range(J):
-                xsf.write(f"{j:<4d} {decay_const[j]:<12g}\n")
+                xsf.write(f"{j:<4d} "
+                          f"{decay_const['neutron'][j]:<12g}\n")
             xsf.write("PRECURSOR_LAMBDA_END\n\n")
 
             xsf.write("PRECURSOR_YIELD_BEGIN\n")
             for j in range(J):
-                xsf.write(f"{j:<4d} {precursor_fraction[j]:<g}\n")
+                xsf.write(f"{j:<4d} "
+                          f"{precursor_fraction['neutron'][j]:<g}\n")
             xsf.write("PRECURSOR_YIELD_END\n\n")
 
             xsf.write("NU_DELAYED_BEGIN\n")
