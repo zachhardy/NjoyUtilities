@@ -34,7 +34,7 @@ def write_xs_file(data, full_path, problem_description):
         chi_prompt = data["chi_prompt"]
         chi_delayed = data["chi_delayed"]
         decay_const = data["decay_constants"]
-        gamma = data["gamma"]
+        precursor_fraction = data["precursor_fraction"]
         inv_velocity = data["inv_velocity"]
         E_avg = data["avg_energy"]
 
@@ -149,7 +149,7 @@ def write_xs_file(data, full_path, problem_description):
 
             xsf.write("PRECURSOR_YIELD_BEGIN\n")
             for j in range(J):
-                xsf.write(f"{j:<4d} {gamma[j]:<g}\n")
+                xsf.write(f"{j:<4d} {precursor_fraction[j]:<g}\n")
             xsf.write("PRECURSOR_YIELD_END\n\n")
 
             xsf.write("NU_DELAYED_BEGIN\n")

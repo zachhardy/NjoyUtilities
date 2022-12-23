@@ -442,8 +442,6 @@ def read_njoy_file(
                 if line.endswith("matrix"):
                     particle_type = words[num_words - 2]
                     rxn_type = words[num_words - 3]
-                    if "fission" in rxn_type:
-                        continue
 
                     if "free gas" in line:
                         rxn_type = "free gas"

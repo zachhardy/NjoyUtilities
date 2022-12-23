@@ -731,6 +731,10 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
                 njoy_input.write(f"6 {argv.elastic_thermal_number} "
                                  f"'elastic s(a,b) neutron matrix'/\n")
 
+    # fission matrix
+    if argv.fissile:
+        njoy_input.write("6 18/ '(n,fission) neutron matrix'/\n")
+
     # MF13 photon production cross-sections
     njoy_input.write("13/\n" if with_gamma else "")
 
@@ -797,6 +801,12 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
             njoy_input.write("5 455 'delayed chi (gamma)'/\n")
 
         njoy_input.write("6/\n")  # MF6 transfer matrices
+
+        if argv.fissile:
+            njoy_input.write("6 18/ '(g,fission) neutron matrix'/\n")
+
+        # MF16 neutron-gamma matrices
+        njoy_input.write("16/\n" if with_gamma else "")
 
         # End groupr
         njoy_input.write("0/\n")  # terminate reactions

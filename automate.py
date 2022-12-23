@@ -202,7 +202,6 @@ if __name__ == "__main__":
                         njoy += f"  --custom_neutron_gs_file={neutron_gs_file} \\\n"
 
                     # gamma/photo-atomic data
-                    print(gs_info['gamma'])
                     if gs_info['gamma']:
                         if not gamma_endf and not photoat_endf:
                             continue
