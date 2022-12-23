@@ -80,8 +80,6 @@ def process_group_structure(
 def process_cross_section(
         n: int,
         lines: list[str],
-        header_size: int = 5,
-        line_incr: int = 1,
         wt_spectrum: bool = False
 ) -> RawXS:
     """
@@ -92,7 +90,6 @@ def process_cross_section(
     n : int, The current line number.
     lines : list[str], The list of lines in the file.
     header_size : int
-    line_incr : int
     wt_spectrum : bool
 
     Returns
@@ -100,13 +97,14 @@ def process_cross_section(
     A table containing the group wise xs.
     """
     # go to first line of data
-    n += 1 if "particle emission" in lines[n + 1] else 0
-    n += header_size
     words = lines[n].split()
+    while not words or not words[0].isdigit():
+        n += 1
+        words = lines[n].split()
 
-    # if no data, return empty
-    if len(words) == 0:
-        return []
+        # this implies no data for the reaction
+        if lines[n].startswith("group constants"):
+            return []
 
     # parse the cross-section
     xs = []
@@ -114,11 +112,11 @@ def process_cross_section(
         value = string_to_float(words[1])
         if wt_spectrum and words[0] == "flx":
             xs.append([value])
-        else:
+        elif not wt_spectrum and words[0].isdigit():
             group = int(words[0]) - 1
             xs.append((group, value))
 
-        n += line_incr
+        n += 1
         words = lines[n].split()
     return xs
 
@@ -127,8 +125,6 @@ def process_cross_section(
 def process_prompt_chi(
         n: int,
         lines: list[str],
-        header_size: int = 4,
-        line_incr: int = 1
 ) -> RawXS:
     """
     Reads 1D prompt fission spectrum from the lines.
@@ -137,28 +133,24 @@ def process_prompt_chi(
     ----------
     n : int, The current line number.
     lines : list[str], The list of lines in the file.
-    header_size : int
-    line_incr : int
       
     Returns
     -------
     A table containing the group-wise xs.
     """
     # go to first line of data
-    n += 2 if "spectrum constant" in lines[n + 2] else 0
-    n += header_size
+    n += 6 if "spectrum constant" in lines[n + 2] else 4
     words = lines[n].split()
 
     # parse the data
     spec = []
     while len(words) >= 2:
-
         group = int(words[0]) - 1
         for number_word in words[1:]:
             spec.append([group, string_to_float(number_word)])
             group += 1
 
-        n += line_incr
+        n += 1
         words = lines[n].split()
     return spec
 
@@ -272,6 +264,8 @@ def process_transfer_matrix(
             gprime = int(words[0]) - 1
             group = int(words[1]) - 1
             vals = [string_to_float(val) for val in words[2:]]
+
+            # check next line
             if overflow:
                 n += 1
                 words = lines[n].split()
@@ -339,15 +333,13 @@ def read_njoy_file(
             ##################################################
 
             if "sigma zeroes" in line:
-                group_structures["neutron"] = process_group_structure(
-                    line_num, file_lines
-                )
+                group_structures["neutron"] = \
+                    process_group_structure(line_num, file_lines)
 
             if "gamma group structure......" in line:
                 if not flag_gamma_structure_processed:
-                    group_structures["gamma"] = process_group_structure(
-                        line_num, file_lines
-                    )
+                    group_structures["gamma"] = \
+                        process_group_structure(line_num, file_lines)
                     flag_gamma_structure_processed = True
 
             ##################################################
@@ -376,9 +368,8 @@ def read_njoy_file(
 
                     # handle total interaction differently
                     if mf == 3 and mt == 1:
-                        cross_sections[rxn_type] = process_cross_section(
-                            line_num, file_lines, line_incr=2
-                        )
+                        cross_sections[rxn_type] = \
+                            process_cross_section(line_num, file_lines)
 
                         # this is to get the weighting spectrum
                         weight_spectrum["neutron"] = process_cross_section(
@@ -402,9 +393,8 @@ def read_njoy_file(
                     for mtname in mtnames:
                         if mtname in line:
                             rxn_type = line[line.find(mtname):]
-                            cross_sections[rxn_type] = process_cross_section(
-                                line_num, file_lines
-                            )
+                            cross_sections[rxn_type] = \
+                                process_cross_section(line_num, file_lines)
 
                 ######################################################
                 # prompt/delayed fission data
@@ -413,18 +403,16 @@ def read_njoy_file(
                 # prompt fission spectrum
                 if mf == 5 and "prompt chi" in line:
                     rxn_type = line[line.find("prompt chi"):]
-                    cross_sections[rxn_type] = process_prompt_chi(
-                        line_num, file_lines
-                    )
+                    cross_sections[rxn_type] = \
+                        process_prompt_chi(line_num, file_lines)
 
                 if mf == 5 and "delayed_chi" in line:
                     cross_sections["decay constants"] = \
                         process_decay_constants(line_num, file_lines)
 
                     rxn_type = line[line.find("delayed chi"):]
-                    cross_sections[rxn_type] = process_delayed_chi(
-                        line_num, file_lines
-                    )
+                    cross_sections[rxn_type] = \
+                        process_delayed_chi(line_num, file_lines)
 
                 ######################################################
                 # neutron transfer matrix data
@@ -457,41 +445,34 @@ def read_njoy_file(
 
                 # Total photon interaction
                 if mf == 23 and mt == 501:
-                    cross_sections["(g,total)"] = process_cross_section(
-                        line_num, file_lines, header_size=4
-                    )
+                    cross_sections["(g,total)"] = \
+                        process_cross_section(line_num, file_lines)
 
                 # Photon coherent scattering
                 if mf == 23 and mt == 502:
-                    cross_sections["(g,coherent)"] = process_cross_section(
-                        line_num, file_lines, header_size=4
-                    )
+                    cross_sections["(g,coherent)"] = \
+                        process_cross_section(line_num, file_lines)
 
                 # Photon incoherent scattering
                 if mf == 23 and mt == 504:
-                    cross_sections["(g,incoherent)"] = process_cross_section(
-                            line_num, file_lines, header_size=4
-                        )
+                    cross_sections["(g,incoherent)"] = \
+                        process_cross_section(line_num, file_lines)
 
                 # 515: Pair production, electron field
                 # 517: Pair production, nuclear field
                 # 516: Pair production; sum of MT=515, 517.
                 if mf == 23 and mt == 516:
                     cross_sections["(g,pair_production)"] = \
-                        process_cross_section(
-                            line_num, file_lines, header_size=4
-                        )
+                        process_cross_section(line_num, file_lines)
 
                 # Photoelectric absorption
                 if mf == 23 and mt == 522:
-                    cross_sections["(g,abst)"] = process_cross_section(
-                        line_num, file_lines, header_size=4
-                    )
+                    cross_sections["(g,abst)"] = \
+                        process_cross_section(line_num, file_lines)
 
                 if mf == 23 and mt == 525:
-                    cross_sections["(g,heat)"] = process_cross_section(
-                        line_num, file_lines, header_size=4
-                    )
+                    cross_sections["(g,heat)"] = \
+                        process_cross_section(line_num, file_lines)
 
                 ######################################################
                 # photo-atomic transfer matrix data
@@ -517,7 +498,7 @@ def read_njoy_file(
                 #   the pp values from transfer(mf26) = 2x the pp
                 #   from the xsec(mf23)
                 if mf == 26 and mt == 516:
-                    transfer_matrices['gamma']['(g,pair_production)'] = \
+                    transfer_matrices["gamma"]["(g,pair_production)"] = \
                         process_transfer_matrix(line_num, file_lines)
 
     njoy_raw_data["group_structures"] = group_structures

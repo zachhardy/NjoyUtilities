@@ -191,10 +191,10 @@ def build_combined_data(
             inv_v[G_n - g - 1] = v
 
     E_avg = np.zeros(G)
-    for p, particle_type in enumerate(["neutron", "gamma"]):
-        ref = G_n if p == 0 else G_n + G_g
-        if f"average energy ({particle_type})" in cross_sections:
-            data = cross_sections[f"average energy ({particle_type})"]
+    for particle in ['neutron', 'gamma']:
+        ref = G_n if particle == 'neutron' else G_n + G_g
+        if f"average energy ({particle})" in cross_sections:
+            data = cross_sections[f"average energy ({particle})"]
             for entry in data:
                 g, v = entry
                 E_avg[ref - g - 1] = v * 1.0e-6
@@ -228,34 +228,35 @@ def build_combined_data(
     nu_total = np.zeros(G)
     nu_prompt = np.zeros(G)
     nu_delayed = np.zeros(G)
-    chi_prompt = np.zeros((2, G_n))
+    chi_prompt = {"neutron": np.zeros(G_n),
+                  "gamma": np.zeros(G_n)}
 
-    for p, particle_type in enumerate(["neutron", "gamma"]):
-        ref = G_n if p == 0 else G
+    for particle in ["neutron", "gamma"]:
+        ref = G_n if particle == "neutron" else G
 
-        if f"total nubar ({particle_type})" in cross_sections:
-            data = cross_sections[f"total nubar ({particle_type})"]
+        if f"total nubar ({particle})" in cross_sections:
+            data = cross_sections[f"total nubar ({particle})"]
             for entry in data:
                 g, v = entry
                 nu_total[ref - g - 1] = v
 
-        if f"prompt nubar ({particle_type})" in cross_sections:
-            data = cross_sections[f"prompt nubar ({particle_type})"]
+        if f"prompt nubar ({particle})" in cross_sections:
+            data = cross_sections[f"prompt nubar ({particle})"]
             for entry in data:
                 g, v = entry
                 nu_prompt[ref - g - 1] = v
 
-        if f"delayed nubar ({particle_type})" in cross_sections:
-            data = cross_sections[f"delayed nubar ({particle_type})"]
+        if f"delayed nubar ({particle})" in cross_sections:
+            data = cross_sections[f"delayed nubar ({particle})"]
             for entry in data:
                 g, v = entry
                 nu_delayed[ref - g - 1] = v
 
-        if f"prompt chi ({particle_type})" in cross_sections:
-            data = cross_sections[f"prompt chi ({particle_type})"]
+        if f"prompt chi ({particle})" in cross_sections:
+            data = cross_sections[f"prompt chi ({particle})"]
             for entry in data:
                 g, v = entry
-                chi_prompt[p][G_n - g - 1] = v
+                chi_prompt[particle][G_n - g - 1] = v
 
     ############################################################
     # Delayed neutron data
@@ -267,18 +268,23 @@ def build_combined_data(
         decay_const = np.array([entry[1] for entry in data])
     J = len(decay_const)  # number of precursor groups
 
-    chi_delayed = np.zeros((2, G_n, J))
-    for p, particle_type in enumerate(["neutron", "gamma"]):
-        if f"delayed chi ({particle_type})" in cross_sections:
-            data = cross_sections[f"delayed chi ({particle_type})"]
+    chi_delayed = {"neutron": np.zeros((G_n, J)),
+                   "gamma": np.zeros((G_n, J))}
+    for particle in ["neutron", "gamma"]:
+        if f"delayed chi ({particle})" in cross_sections:
+            data = cross_sections[f"delayed chi ({particle})"]
             for entry in data:
                 g, v = entry[0], entry[1:]
-                chi_delayed[p][G_n - g - 1] = v
+                chi_delayed[particle][G_n - g - 1] = v
 
-    precursor_fraction = np.zeros(J)
-    if np.sum(nu_delayed) > 0 and np.sum(chi_delayed) > 0:
-        precursor_fraction = np.sum(chi_delayed, axis=0)
-    chi_delayed /= precursor_fraction
+    precursor_fraction = {"neutron": np.zeros(J),
+                          "gamma": np.zeros(J)}
+    for particle in ["neutron", "gamma"]:
+        if np.sum(chi_delayed[particle]) > 0:
+            precursor_fraction[particle] = \
+                np.sum(chi_delayed[particle], axis=0)
+
+            chi_delayed[particle] /= precursor_fraction[particle]
 
     ############################################################
     # Reconcile cross-sections
@@ -298,7 +304,7 @@ def build_combined_data(
     ############################################################
 
     M = 0
-    for particle_type, transfers in transfer_matrices.items():
+    for particle, transfers in transfer_matrices.items():
         for rxn_type, data in transfers.items():
             M = max(M, len(data[0][2])) if data else M
 
@@ -307,7 +313,7 @@ def build_combined_data(
     ############################################################
 
     thermal_rxns = []
-    for key in transfer_matrices['neutron'].keys():
+    for key in transfer_matrices["neutron"].keys():
         if any(s in key for s in ["free gas", "s(a,b)"]):
             thermal_rxns.append(key)
     if len(thermal_rxns) > 1 and "free gas" in thermal_rxns:
@@ -316,7 +322,7 @@ def build_combined_data(
 
     n_therm = -1
     for rxn_type in thermal_rxns:
-        data = transfer_matrices['neutron'][rxn_type]
+        data = transfer_matrices["neutron"][rxn_type]
         if data:
             n_therm = max(n_therm, max(max(*row[:2]) for row in data))
 
@@ -357,7 +363,7 @@ def build_combined_data(
     ############################################################
 
     transfer_mats = np.zeros((M, G, G))
-    for particle_type, transfers in transfer_matrices.items():
+    for particle, transfers in transfer_matrices.items():
         for rxn_type, data in transfers.items():
 
             # skip thermal reactions
@@ -365,13 +371,13 @@ def build_combined_data(
             if any(s in rxn_type for s in skip):
                 continue
 
-            if particle_type == "neutron":
+            if particle == "neutron":
                 if "n," in rxn_type:
                     add_transfer_neutron(data, transfer_mats)
                 elif "g," in rxn_type:
                     add_transfer_neutron(data, transfer_mats, offset=G_g)
 
-            elif particle_type == "gamma":
+            elif particle == "gamma":
                 if "g," in rxn_type:
                     add_transfer_gamma(data, transfer_mats)
                 elif "n," in rxn_type:
@@ -499,14 +505,14 @@ def build_combined_data(
                     iax.set_ylabel("$\chi$ (MeV$^{-1}$)" if i == 0 else
                                    "Neutrons Per Fission")
 
-                ax[0].semilogx(E_avg[:G_n], chi_prompt[0])
+                ax[0].semilogx(E_avg[:G_n], chi_prompt["neutron"])
                 ax[0].grid(True)
 
-                line0, = ax[1].semilogx(E_avg[:G_n], nu_total[:G_n], 'b')
-                line1, = ax[1].semilogx(E_avg[:G_n], nu_prompt[:G_n], 'r')
+                line0, = ax[1].semilogx(E_avg[:G_n], nu_total[:G_n], "b")
+                line1, = ax[1].semilogx(E_avg[:G_n], nu_prompt[:G_n], "r")
 
                 twin_ax = ax[1].twinx()
-                line2, = twin_ax.semilogx(E_avg[:G_n], nu_delayed[:G_n], 'g')
+                line2, = twin_ax.semilogx(E_avg[:G_n], nu_delayed[:G_n], "g")
                 twin_ax.set_ylabel("Delayed Neutrons Per Fission")
 
                 lines = [line0, line1, line2]
@@ -542,14 +548,14 @@ def build_combined_data(
                     iax.set_ylabel("$\chi$ (MeV$^{-1}$)" if i == 0 else
                                    r"Neutrons Per Fission")
 
-                ax[0].semilogx(E_avg[:G_n], chi_prompt[1])
+                ax[0].semilogx(E_avg[:G_n], chi_prompt["gamma"])
                 ax[0].grid(True)
 
-                line0, = ax[1].semilogx(E_avg[G_n:], nu_total[G_n:], 'b')
-                line1, = ax[1].semilogx(E_avg[G_n:], nu_prompt[G_n:], 'r')
+                line0, = ax[1].semilogx(E_avg[G_n:], nu_total[G_n:], "b")
+                line1, = ax[1].semilogx(E_avg[G_n:], nu_prompt[G_n:], "r")
 
                 twin_ax = ax[1].twinx()
-                line2, = twin_ax.semilogx(E_avg[G_n:], nu_delayed[G_n:], 'g')
+                line2, = twin_ax.semilogx(E_avg[G_n:], nu_delayed[G_n:], "g")
                 twin_ax.set_ylabel("Delayed Neutrons Per Fission")
 
                 lines = [line0, line1, line2]

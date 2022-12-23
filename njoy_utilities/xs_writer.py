@@ -10,8 +10,8 @@ def write_xs_file(data, full_path, problem_description):
     with open(full_path, "w") as xsf:
         xsf.write("#========== Problem Description ==========" + "\n")
 
-        n_group = problem_description['G_n']
-        g_group = problem_description['G_g']
+        n_group = problem_description["G_n"]
+        g_group = problem_description["G_g"]
 
         xsf.write(f"# Isotope: {problem_description['isotope']}\n")
         xsf.write(f"# Problem type: {problem_description['problem_type']}\n")
@@ -118,10 +118,10 @@ def write_xs_file(data, full_path, problem_description):
             xsf.write("NU_PROMPT_END\n\n")
 
         # this is the neutron induced spectrum
-        if np.linalg.norm(chi_prompt) > 1.0e-20:
+        if np.linalg.norm(chi_prompt["neutron"]) > 1.0e-20:
             xsf.write("CHI_PROMPT_BEGIN\n")
             for g in range(n_group):
-                xsf.write(f"{g:<4d} {chi_prompt[0][g]:<g}\n")
+                xsf.write(f"{g:<4d} {chi_prompt['neutron'][g]:<g}\n")
             xsf.write("CHI_PROMPT_END\n\n")
 
         if np.linalg.norm(inv_velocity) > 1.0e-20:
@@ -161,5 +161,6 @@ def write_xs_file(data, full_path, problem_description):
             for g in range(G):
                 for j in range(J):
                     xsf.write("G_PRECURSORJ_VAL ")
-                    xsf.write(f"{g:<4d} {j:<3d} {chi_delayed[g][j]:<g}\n")
+                    xsf.write(f"{g:<4d} {j:<3d} "
+                              f"{chi_delayed['neutron'][g][j]:<g}\n")
             xsf.write("CHI_DELAYED_END\n\n")

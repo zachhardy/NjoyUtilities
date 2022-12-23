@@ -8,6 +8,12 @@ import combiner
 import xs_writer
 
 
+class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
+                      argparse.MetavarTypeHelpFormatter,
+                      argparse.RawTextHelpFormatter):
+    pass
+
+
 ############################################################
 # Check Python version
 ############################################################
@@ -22,32 +28,40 @@ if sys.version_info[0] < 3:
 ############################################################
 
 argparser = argparse.ArgumentParser(
-    description="Executes the main steps of conversion"
+    description="Executes the main steps of conversion",
+    formatter_class=CustomFormatter
 )
 
 argparser.add_argument(
-    "--output_directory", type=str, required=True, metavar='',
+    "--output_directory",
+    type=str,
+    required=True,
     help="Complete path where to store the output.",
 )
 
 argparser.add_argument(
-    "--njoy_output_filename", type=str, required=True, metavar='',
+    "--njoy_output_filename",
+    type=str,
+    required=True,
     help="Name of output file produced by NJOY."
 )
 
 argparser.add_argument(
-    "--xs_filename", type=str, metavar='',
+    "--xs_filename",
+    type=str,
     help="Name of XS file.",
 )
 
 argparser.add_argument(
-    "--plot", action='store_true', default=False,
+    "--plot",
+    action="store_true",
+    default=False,
     help="A flag for plotting the XS data."
 )
 
-args = argparser.parse_args()                                            
+argv = argparser.parse_args()
 
-output_directory = os.path.abspath(args.output_directory)
+output_directory = os.path.abspath(argv.output_directory)
 if not os.path.isdir(output_directory):
     warnings.warn(
         "Value supplied to --output_directory does not point to an "
@@ -60,7 +74,7 @@ if not os.path.isdir(output_directory):
 ############################################################
 
 njoy_output_path = os.path.join(
-    output_directory, "njoy", args.njoy_output_filename
+    output_directory, "njoy", argv.njoy_output_filename
 )
 print(f"\nReading NJOY output located at {njoy_output_path}...")
 
@@ -75,13 +89,13 @@ raw_njoy_data = read_njoy_outputs.read_njoy_file(
 print("\nCombining disjoint data...")
 
 data, problem_description = combiner.build_combined_data(
-    raw_njoy_data, plot=args.plot
+    raw_njoy_data, plot=argv.plot
 )
 
 # TODO: this is not a good way of recovering the isotope if the user
 #       supplies its own output filename
-filename = args.njoy_output_filename.split("_")
-problem_description['isotope'] = filename[0].split(".")[0]
+filename = argv.njoy_output_filename.split("_")
+problem_description["isotope"] = filename[0].split(".")[0]
 print(f"\nProblem Description:")
 for key, val in problem_description.items():
     print(f"{key:<15}: {val}")
@@ -90,11 +104,11 @@ for key, val in problem_description.items():
 # Write cross-section file in Chi format
 ############################################################
 
-if len(args.xs_filename) == 0:
+if len(argv.xs_filename) == 0:
     # generate name automatically
-    xs_filename = f"{args.njoy_output_filename}.xs"
+    xs_filename = f"{argv.njoy_output_filename}.xs"
 else:
-    xs_filename = args.xs_filename
+    xs_filename = argv.xs_filename
 
 xs_output_directory = os.path.join(output_directory, "xs")
 if not os.path.isdir(xs_output_directory):
@@ -113,7 +127,7 @@ xs_writer.write_xs_file(
 # If plots were saved, move them
 ############################################################
 
-if args.plot:
+if argv.plot:
     import os
     import glob
 
