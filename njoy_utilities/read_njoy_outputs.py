@@ -407,7 +407,7 @@ def read_njoy_file(
                         process_prompt_chi(line_num, file_lines)
 
                 if mf == 5 and "delayed_chi" in line:
-                    cross_sections["decay constants"] = \
+                    cross_sections[f"decay constants {particle}"] = \
                         process_decay_constants(line_num, file_lines)
 
                     rxn_type = line[line.find("delayed chi"):]
