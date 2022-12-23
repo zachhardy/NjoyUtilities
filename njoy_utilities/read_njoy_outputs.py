@@ -97,13 +97,14 @@ def process_cross_section(
     A table containing the group wise xs.
     """
     # go to first line of data
-    words = lines[n].split()
+    words = lines[n].strip().split()
     while not words or not words[0].isdigit():
         n += 1
-        words = lines[n].split()
+        line = lines[n].strip()
+        words = line.split()
 
         # this implies no data for the reaction
-        if lines[n].startswith("group constants"):
+        if line.startswith("group constants"):
             return []
 
     # parse the cross-section
@@ -117,7 +118,7 @@ def process_cross_section(
             xs.append((group, value))
 
         n += 1
-        words = lines[n].split()
+        words = lines[n].strip().split()
     return xs
 
 
@@ -140,7 +141,7 @@ def process_prompt_chi(
     """
     # go to first line of data
     n += 6 if "spectrum constant" in lines[n + 2] else 4
-    words = lines[n].split()
+    words = lines[n].strip().split()
 
     # parse the data
     spec = []
@@ -151,7 +152,7 @@ def process_prompt_chi(
             group += 1
 
         n += 1
-        words = lines[n].split()
+        words = lines[n].strip().split()
     return spec
 
 
@@ -174,7 +175,7 @@ def process_decay_constants(
     """
     # go to first line of data
     n += 5 if "spectrum constant" in lines[n + 2] else 3
-    words = lines[n].split()
+    words = lines[n].strip().split()
     if words[0] != "group":
         raise AssertionError("Unexpected line encountered.")
 
@@ -202,7 +203,7 @@ def process_delayed_chi(
     """
     # go to first line of data
     n += 7 if "spectrum constant" in lines[n + 2] else 5
-    words = lines[n].split()
+    words = lines[n].strip().split()
 
     # parse the data
     matrix = []
@@ -212,7 +213,7 @@ def process_delayed_chi(
         matrix.append((group, vals))
 
         n += 1
-        words = lines[n].split()
+        words = lines[n].strip().split()
     return matrix
 
 
@@ -249,11 +250,11 @@ def process_transfer_matrix(
     else:
         raise ValueError("Unexpected line encountered.")
     n += 3
-    words = lines[n].split()
+    words = lines[n].strip().split()
 
     # parse the data
     matrix = []
-    while len(words) >= 2:
+    while not lines[n].strip().startswith("group constants"):
 
         # In fission matrices, there are lines with
         # `spec` and `prod`, and in some gamma matrices there are lines
@@ -268,7 +269,7 @@ def process_transfer_matrix(
             # check next line
             if overflow:
                 n += 1
-                words = lines[n].split()
+                words = lines[n].strip().split()
                 vals.extend([string_to_float(val) for val in words])
 
             if matrix_type == "legendre":
@@ -277,12 +278,11 @@ def process_transfer_matrix(
                 for g in range(len(vals)):
                     matrix.append((gprime, group + g, [vals[g]]))
 
-            n += 1
-            words = lines[n].split()
         except (ValueError, IndexError):
-            n += 1
-            words = lines[n].split()
+            pass
 
+        n += 1
+        words = lines[n].strip().split()
     return matrix
 
 
@@ -358,11 +358,11 @@ def read_njoy_file(
                 if line.endswith("cross section"):
 
                     # the reaction type
-                    rxn_type = words[num_words - 3]
+                    rxn = words[num_words - 3]
 
                     # handle total interaction differently
                     if mf == 3 and mt == 1:
-                        cross_sections[rxn_type] = \
+                        cross_sections[rxn] = \
                             process_cross_section(line_num, file_lines)
 
                         # this is to get the weighting spectrum
@@ -372,7 +372,7 @@ def read_njoy_file(
 
                     # all other reactions
                     else:
-                        cross_sections[rxn_type] = \
+                        cross_sections[rxn] = \
                             process_cross_section(line_num, file_lines)
 
                 # ------------------------------ auxiliary data
@@ -384,24 +384,24 @@ def read_njoy_file(
                 if mf == 3:
                     for mtname in mtnames:
                         if mtname in line:
-                            rxn_type = line[line.find(mtname):]
-                            cross_sections[rxn_type] = \
+                            rxn = line[line.find(mtname):]
+                            cross_sections[rxn] = \
                                 process_cross_section(line_num, file_lines)
 
                 # ------------------------------ fission data
 
                 # prompt fission spectrum
                 if mf == 5 and "prompt chi" in line:
-                    rxn_type = line[line.find("prompt chi"):]
-                    cross_sections[rxn_type] = \
+                    rxn = line[line.find("prompt chi"):]
+                    cross_sections[rxn] = \
                         process_prompt_chi(line_num, file_lines)
 
                 if mf == 5 and "delayed_chi" in line:
                     cross_sections[f"decay constants {particle}"] = \
                         process_decay_constants(line_num, file_lines)
 
-                    rxn_type = line[line.find("delayed chi"):]
-                    cross_sections[rxn_type] = \
+                    rxn = line[line.find("delayed chi"):]
+                    cross_sections[rxn] = \
                         process_delayed_chi(line_num, file_lines)
 
                 # ------------------------------ transfer matrices
@@ -416,15 +416,15 @@ def read_njoy_file(
                 #   the n,3n values from transfer(mf8/mt17) = 3x the n,3n
                 #   from the xsec(mf3/mt17
                 if line.endswith("matrix"):
-                    particle_type = words[num_words - 2]
-                    rxn_type = words[num_words - 3]
+                    particle = words[num_words - 2]
+                    rxn = words[num_words - 3]
 
                     if "free gas" in line:
-                        rxn_type = "free gas"
+                        rxn = "free gas"
                     if "s(a,b)" in line:
-                        rxn_type = f"{words[num_words - 4]} s(a,b)"
+                        rxn = f"{words[num_words - 4]} s(a,b)"
 
-                    transfer_matrices[particle_type][rxn_type] = \
+                    transfer_matrices[particle][rxn] = \
                         process_transfer_matrix(line_num, file_lines)
 
                 # ------------------------------ photo-atomic cross-sections

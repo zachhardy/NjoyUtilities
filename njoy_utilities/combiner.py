@@ -310,11 +310,11 @@ def build_combined_data(
     ############################################################
     # Lambda-ish to add neutron data
     # Always operates on transfer_mats
-    def add_transfer_neutron(data_values, dst, offset=0):
+    def add_transfer_neutron(data_values, dst, cross_particle=False):
         for data_value in data_values:
-            gprime = G_n + offset - data_value[0] - 1
+            G_ref = G_n if not cross_particle else G_n + G_g
+            gprime = G_ref - data_value[0] - 1
             group = G_n - data_value[1] - 1
-
             num_moms = len(data_value[2])
             for moment in range(0, num_moms):
                 val = data_value[2][moment]
@@ -323,10 +323,10 @@ def build_combined_data(
     ############################################################
     # Lambda-ish to add gamma data
     # Always operates on transfer_mats
-    def add_transfer_gamma(data_values, dst, offset=0):
-        # (g,coherent)
+    def add_transfer_gamma(data_values, dst, cross_particle=False):
         for data_value in data_values:
-            gprime = G_n + G_g - offset - data_value[0] - 1
+            G_ref = G_n + G_g if not cross_particle else G_n
+            gprime = G_ref - data_value[0] - 1
             group = G_n + G_g - data_value[1] - 1
 
             # Determine number of moments
@@ -335,29 +335,44 @@ def build_combined_data(
                 val = data_value[2][moment]
                 dst[moment][gprime][group] += val
 
-    # -------------------------------------------------- scattering matrices
+    # -------------------------------------------------- transfer matrices
     # include all scattering except for thermal
 
+    fission_mat = np.zeros((1, G, G))
     scattering_mats = np.zeros((M, G, G))
     for particle, transfers in transfer_matrices.items():
         for rxn_type, data in transfers.items():
 
-            # skip thermal reactions
-            skip = ["free_gas", "s(a,b)", "fission"]
-            if any(s in rxn_type for s in skip):
-                continue
+            # -------------------- scattering reactions
+            if "fission" not in rxn_type:
 
-            if particle == "neutron":
-                if "n," in rxn_type:
-                    add_transfer_neutron(data, scattering_mats)
-                elif "g," in rxn_type:
-                    add_transfer_neutron(data, scattering_mats, offset=G_g)
+                # skip thermal reactions
+                skip = ["free_gas", "s(a,b)"]
+                if any(s in rxn_type for s in skip):
+                    continue
 
-            elif particle == "gamma":
-                if "g," in rxn_type:
-                    add_transfer_gamma(data, scattering_mats)
-                elif "n," in rxn_type:
-                    add_transfer_gamma(data, scattering_mats, offset=G_n)
+                if particle == "neutron":
+                    if "n," in rxn_type:
+                        add_transfer_neutron(data, scattering_mats)
+                    elif "g," in rxn_type:
+                        add_transfer_neutron(data, scattering_mats, True)
+
+                elif particle == "gamma":
+                    if "g," in rxn_type:
+                        add_transfer_gamma(data, scattering_mats)
+                    elif "n," in rxn_type:
+                        add_transfer_gamma(data, scattering_mats, True)
+
+            # -------------------- fission reactions
+            else:
+                if particle == "neutron":
+                    if "n," in rxn_type:
+                        add_transfer_neutron(data, fission_mat)
+                    elif "g," in rxn_type:
+                        add_transfer_neutron(data, fission_mat, True)
+                elif particle == "gamma":
+                    if "n," in rxn_type:
+                        add_transfer_gamma(data, fission_mat, True)
 
     # -------------------------------------------------- apply thermal treatment
 
@@ -562,6 +577,7 @@ def build_combined_data(
                    "inv_velocity": inv_v,
                    "avg_energy": e_avg,
                    "scattering_matrices": scattering_mats,
-                   "scattering_matrices_sparsity": scattering_mats_sparsity}
+                   "scattering_matrices_sparsity": scattering_mats_sparsity,
+                   "fission_matrices": fission_mat}
 
     return return_data, problem_description
