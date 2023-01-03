@@ -46,18 +46,21 @@ def write_xs_file(data, full_path, problem_description):
         inv_velocity = data["inv_velocity"]
         E_avg = data["avg_energy"]
 
-        transfer_mats = data["scattering_matrices"]
-        transfer_mats_nonzeros = data["scattering_matrices_sparsity"]
+        scattering_mats = data["scattering_matrices"]
+        scattering_mats_nonzeros = data["scattering_matrices_sparsity"]
+
+        fission_mats = data["fission_matrices"]
+        fission_mats_nonzeros = data["fission_matrices_sparsity"]
 
         neutron_gs = data["neutron_gs"]
         gamma_gs = data["gamma_gs"]
 
-        # --------------------------------------------------
+        # ------------------------------------------------------------
         # Write general info
-        # --------------------------------------------------
+        # ------------------------------------------------------------
 
         G = n_group + g_group
-        M = len(transfer_mats)
+        M = len(scattering_mats)
         J = len(decay_const['neutron'])
 
         xsf.write("# Output\n")
@@ -66,9 +69,9 @@ def write_xs_file(data, full_path, problem_description):
         xsf.write(f"NUM_PRECURSORS {J}\n")
         xsf.write("\n")
 
-        # --------------------------------------------------
+        # ------------------------------------------------------------
         # Write group structures
-        # --------------------------------------------------
+        # ------------------------------------------------------------
 
         if neutron_gs:
             # print(n_group, len(neutron_gs))
@@ -95,9 +98,9 @@ def write_xs_file(data, full_path, problem_description):
             xsf.write(f"{g:<4d} {E_avg[g]:<12.8g}\n")
         xsf.write("AVG_ENERGY_END\n\n")
 
-        # --------------------------------------------------
+        # ------------------------------------------------------------
         # Write reaction data
-        # --------------------------------------------------
+        # ------------------------------------------------------------
 
         xsf.write("SIGMA_T_BEGIN\n")
         for g in range(G):
@@ -119,6 +122,17 @@ def write_xs_file(data, full_path, problem_description):
             xsf.write(f"{g:<4d} {sig_heat[g]:<g}\n")
         xsf.write("SIGMA_HEAT_END\n\n")
 
+        if np.linalg.norm(inv_velocity) > 1.0e-20:
+            xsf.write("VELOCITY_BEGIN  # cm/sh\n")
+            for g in range(n_group):
+                velocity = 1.0e-6 / inv_velocity[g]
+                xsf.write(f"{g:<4d} {velocity:<g}\n")
+            xsf.write("VELOCITY_END\n\n")
+
+        # ------------------------------------------------------------
+        # Write fission data
+        # ------------------------------------------------------------
+
         if np.linalg.norm(sig_f) > 1.0e-20:
             xsf.write("SIGMA_F_BEGIN\n")
             for g in range(G):
@@ -137,6 +151,12 @@ def write_xs_file(data, full_path, problem_description):
                 xsf.write(f"{g:<4d} {nu_prompt[g]:<12g}\n")
             xsf.write("NU_PROMPT_END\n\n")
 
+        if J > 0:
+            xsf.write("NU_DELAYED_BEGIN\n")
+            for g in range(G):
+                xsf.write(f"{g:<4d} {nu_delayed[g]:<g}\n")
+            xsf.write("NU_DELAYED_END\n\n")
+
         # this is the neutron induced spectrum
         if np.linalg.norm(chi_prompt["neutron"]) > 1.0e-20:
             xsf.write("CHI_PROMPT_BEGIN\n")
@@ -144,24 +164,15 @@ def write_xs_file(data, full_path, problem_description):
                 xsf.write(f"{g:<4d} {chi_prompt['neutron'][g]:<g}\n")
             xsf.write("CHI_PROMPT_END\n\n")
 
-        if np.linalg.norm(inv_velocity) > 1.0e-20:
-            xsf.write("VELOCITY_BEGIN  # cm/sh\n")
-            for g in range(n_group):
-                velocity = 1.0e-6 / inv_velocity[g]
-                xsf.write(f"{g:<4d} {velocity:<g}\n")
-            xsf.write("VELOCITY_END\n\n")
-
-        xsf.write("TRANSFER_MOMENTS_BEGIN\n")
-        for m in range(M):
-            xsf.write(f"# l = {m}\n")
-            for gprime in range(G):
-                for g in transfer_mats_nonzeros[m][gprime]:
-                    xsf.write("M_GPRIME_G_VAL ")
-                    xsf.write(f"{m:<3d} {gprime:<4d} {g:<4d} ")
-                    xsf.write(f"{transfer_mats[m][gprime, g]:<g}\n")
-        xsf.write("TRANSFER_MOMENTS_END\n\n")
-
         if J > 0:
+            xsf.write("CHI_DELAYED_BEGIN\n")
+            for g in range(G):
+                for j in range(J):
+                    xsf.write("G_PRECURSORJ_VAL ")
+                    xsf.write(f"{g:<4d} {j:<3d} "
+                              f"{chi_delayed['neutron'][g][j]:<g}\n")
+            xsf.write("CHI_DELAYED_END\n\n")
+
             xsf.write("PRECURSOR_LAMBDA_BEGIN\n")
             for j in range(J):
                 xsf.write(f"{j:<4d} "
@@ -174,15 +185,24 @@ def write_xs_file(data, full_path, problem_description):
                           f"{precursor_fraction['neutron'][j]:<g}\n")
             xsf.write("PRECURSOR_YIELD_END\n\n")
 
-            xsf.write("NU_DELAYED_BEGIN\n")
-            for g in range(G):
-                xsf.write(f"{g:<4d} {nu_delayed[g]:<g}\n")
-            xsf.write("NU_DELAYED_END\n\n")
+        # ------------------------------------------------------------
+        # Write transfer matrix data
+        # ------------------------------------------------------------
 
-            xsf.write("CHI_DELAYED_BEGIN\n")
-            for g in range(G):
-                for j in range(J):
-                    xsf.write("G_PRECURSORJ_VAL ")
-                    xsf.write(f"{g:<4d} {j:<3d} "
-                              f"{chi_delayed['neutron'][g][j]:<g}\n")
-            xsf.write("CHI_DELAYED_END\n\n")
+        xsf.write("TRANSFER_MOMENTS_BEGIN\n")
+        for m in range(M):
+            xsf.write(f"# l = {m}\n")
+            for gp in range(G):
+                for g in scattering_mats_nonzeros[m][gp]:
+                    xsf.write("M_GPRIME_G_VAL ")
+                    xsf.write(f"{m:<3d} {gp:<4d} {g:<4d} ")
+                    xsf.write(f"{scattering_mats[m][gp][g]:<g}\n")
+        xsf.write("TRANSFER_MOMENTS_END\n\n")
+
+        # xsf.write("PRODUCTION_MATRIX_BEGIN\n")
+        # for gp in range(G):
+        #     for g in fission_mats_nonzeros[0][gp]:
+        #         xsf.write("GPRIME_G_VAL ")
+        #         xsf.write(f"{gp:<4d} {g:<4d} ")
+        #         xsf.write(f"{fission_mats[0][gp][g]:<g}\n")
+        # xsf.write("PRODUCTION_MATRIX_END\n")

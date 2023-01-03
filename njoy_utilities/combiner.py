@@ -15,13 +15,17 @@ def build_combined_data(
     Combines enjoy raw data into a dictionary of vectors and matrices.
     """
 
-    # -------------------------------------------------- raw njoy data
+    # ------------------------------------------------------------
+    # Get raw NJOY data
+    # ------------------------------------------------------------
 
     group_structures: dict = raw_njoy_data['group_structures']
     cross_sections: dict = raw_njoy_data['cross_sections']
     transfer_matrices: dict = raw_njoy_data['transfer_matrices']
 
-    # -------------------------------------------------- number of groups
+    # ------------------------------------------------------------
+    # Number of groups
+    # ------------------------------------------------------------
 
     n_gs, g_gs = [], []
     if 'neutron' in group_structures:
@@ -33,7 +37,9 @@ def build_combined_data(
     G_g = len(g_gs)
     G = G_n + G_g
 
-    # -------------------------------------------------- problem type
+    # ------------------------------------------------------------
+    # Problem type
+    # ------------------------------------------------------------
 
     problem_description = {}
     if n_gs:
@@ -51,7 +57,9 @@ def build_combined_data(
     problem_description['G_n'] = G_n
     problem_description['G_g'] = G_g
 
-    # -------------------------------------------------- total xs
+    # ------------------------------------------------------------
+    # Total cross-sections
+    # ------------------------------------------------------------
 
     sig_t = np.zeros(G)
 
@@ -67,7 +75,9 @@ def build_combined_data(
             g, v = entry
             sig_t[G - g - 1] = v
 
-    # -------------------------------------------------- heating xs
+    # ------------------------------------------------------------
+    # Heating cross-sections
+    # ------------------------------------------------------------
 
     sig_heat = np.zeros(G)
 
@@ -83,7 +93,9 @@ def build_combined_data(
             g, v = entry
             sig_heat[G - g - 1] = v
 
-    # -------------------------------------------------- capture xs
+    # ------------------------------------------------------------
+    # Capture cross-sections
+    # ------------------------------------------------------------
 
     sig_x = np.zeros(G)
 
@@ -99,7 +111,9 @@ def build_combined_data(
             g, v = entry
             sig_x[G - g - 1] = v
 
-    # -------------------------------------------------- scattering xs
+    # ------------------------------------------------------------
+    # Scattering cross-sections
+    # ------------------------------------------------------------
 
     sig_el = np.zeros(G)
     if "(n,elastic)" in cross_sections:
@@ -172,7 +186,9 @@ def build_combined_data(
             v = entry[1]
             sig_pairprod[G - g - 1] += v
 
-    # ------------------------------------------------- auxiliary data
+    # ------------------------------------------------------------
+    # Auxiliary data
+    # ------------------------------------------------------------
 
     inv_v = np.zeros(G)
     if "inverse velocity" in cross_sections:
@@ -198,7 +214,9 @@ def build_combined_data(
             g, elow, ehigh = entry
             e_avg[G - g - 1] = 0.5 * (elow + ehigh)
 
-    # -------------------------------------------------- fission data
+    # ------------------------------------------------------------
+    # Fission data
+    # ------------------------------------------------------------
 
     sig_f = np.zeros(G)
 
@@ -272,7 +290,9 @@ def build_combined_data(
             # normalize chi delayed
             chi_delayed[particle] /= precursor_fraction[particle]
 
-    # -------------------------------------------------- reconciliation
+    # ------------------------------------------------------------
+    # Compute the scattering and absorption cross-sections
+    # ------------------------------------------------------------
 
     # compute the total scattering cross-section
     sig_s = np.zeros(G)
@@ -282,14 +302,18 @@ def build_combined_data(
     # the absorption is given by the total minus scattering
     sig_a = sig_t - sig_s
 
-    # -------------------------------------------------- number of moments
+    # ------------------------------------------------------------
+    # Compute the number of moments
+    # ------------------------------------------------------------
 
     M = 0
     for particle, transfers in transfer_matrices.items():
         for rxn_type, data in transfers.items():
             M = max(M, len(data[0][2])) if data else M
 
-    # -------------------------------------------------- find thermal cutoff
+    # ------------------------------------------------------------
+    # Find the thermal cutoff group
+    # ------------------------------------------------------------
 
     thermal_rxns = []
     for key in transfer_matrices["neutron"].keys():
@@ -305,9 +329,10 @@ def build_combined_data(
         if data:
             n_therm = max(n_therm, max(max(*row[:2]) for row in data))
 
-    # -------------------------------------------------- utility functions
+    # ------------------------------------------------------------
+    # Define utility functions for building matrices
+    # ------------------------------------------------------------
 
-    ############################################################
     # Lambda-ish to add neutron data
     # Always operates on transfer_mats
     def add_transfer_neutron(data_values, dst, cross_particle=False):
@@ -320,7 +345,6 @@ def build_combined_data(
                 val = data_value[2][moment]
                 dst[moment][gprime][group] += val
 
-    ############################################################
     # Lambda-ish to add gamma data
     # Always operates on transfer_mats
     def add_transfer_gamma(data_values, dst, cross_particle=False):
@@ -335,15 +359,20 @@ def build_combined_data(
                 val = data_value[2][moment]
                 dst[moment][gprime][group] += val
 
-    # -------------------------------------------------- transfer matrices
-    # include all scattering except for thermal
+    # ------------------------------------------------------------
+    # Construct fission and scattering matrices
+    # ------------------------------------------------------------
 
-    fission_mat = np.zeros((1, G, G))
+    # include all scattering except for thermal
+    fission_mats = np.zeros((1, G, G))
     scattering_mats = np.zeros((M, G, G))
     for particle, transfers in transfer_matrices.items():
         for rxn_type, data in transfers.items():
 
-            # -------------------- scattering reactions
+            # ----------------------------------------
+            # Scattering matrix
+            # ----------------------------------------
+
             if "fission" not in rxn_type:
 
                 # skip thermal reactions
@@ -363,18 +392,23 @@ def build_combined_data(
                     elif "n," in rxn_type:
                         add_transfer_gamma(data, scattering_mats, True)
 
-            # -------------------- fission reactions
+            # ----------------------------------------
+            # Fission matrix
+            # ----------------------------------------
+
             else:
                 if particle == "neutron":
                     if "n," in rxn_type:
-                        add_transfer_neutron(data, fission_mat)
+                        add_transfer_neutron(data, fission_mats)
                     elif "g," in rxn_type:
-                        add_transfer_neutron(data, fission_mat, True)
+                        add_transfer_neutron(data, fission_mats, True)
                 elif particle == "gamma":
                     if "n," in rxn_type:
-                        add_transfer_gamma(data, fission_mat, True)
+                        add_transfer_gamma(data, fission_mats, True)
 
-    # -------------------------------------------------- apply thermal treatment
+    # ------------------------------------------------------------
+    # Apply thermal treatment
+    # ------------------------------------------------------------
 
     if thermal_rxns and n_therm >= -1:
 
@@ -404,28 +438,43 @@ def build_combined_data(
         # from absorption and thermal scattering
         sig_t[bgn:end] = sig_a[bgn:end] + sig_s[bgn:end]
 
-    # -------------------------------------------------- compute sparsity
+    # ------------------------------------------------------------
+    # Compute sparsity
+    # ------------------------------------------------------------
 
-    scattering_mats_sparsity = []
-    for m in range(0, M):
-        mat_non_zeros = []
-        for gp in range(0, G):
-            non_zeros = []
-            for g in range(0, G):
-                if np.abs(scattering_mats[m][gp, g]) > 1.0e-16:
-                    non_zeros.append(g)
-            mat_non_zeros.append(non_zeros)
-        scattering_mats_sparsity.append(mat_non_zeros)
+    scattering_sparsity = []
+    for m in range(len(scattering_mats)):
+        nonzeros = []
+        for gp in range(G):
+            entries = []
+            for g in range(G):
+                if np.abs(scattering_mats[m][gp][g]) > 1.0e-16:
+                    entries.append(g)
+            nonzeros.append(entries)
+        scattering_sparsity.append(nonzeros)
 
-    # -------------------------------------------------- plotting
+    fission_sparsity = []
+    for m in range(len(fission_mats)):
+        nonzeros = []
+        for gp in range(G):
+            entries = []
+            for g in range(G):
+                if np.abs(fission_mats[m][gp][g]) > 1.0e-16:
+                    entries.append(g)
+            nonzeros.append(entries)
+        fission_sparsity.append(nonzeros)
+
+    # ------------------------------------------------------------
+    # Plotting
+    # ------------------------------------------------------------
 
     if plot:
-        Atest = np.copy(scattering_mats[0])
-        nz = np.nonzero(Atest)
-        Atest[nz] = np.log10(Atest[nz]) + 10.0
+        A = [np.copy(scattering_mats[0]), np.copy(fission_mats[0])]
+        nz = [np.nonzero(a) for a in A]
+        for i in range(2):
+            A[i][nz[i]] = np.log10(A[i][nz[i]]) + 10.0
 
-        plt.figure()
-        plt.imshow(Atest, cmap=cm.Greys)
+        # define ticks
         if G < 6:
             ticks = np.arange(0, G, 1)
         elif 6 <= G < 21:
@@ -441,12 +490,26 @@ def build_combined_data(
         else:
             ticks = np.arange(0, G, 50)
 
-        plt.xticks(ticks, [str(g) for g in ticks])
-        plt.yticks(ticks, [str(g) for g in ticks])
-        plt.xlabel("Destination energy group")
-        plt.ylabel("Source energy group")
-        plt.gca().xaxis.set_ticks_position("top")
-        plt.gca().xaxis.set_label_position("top")
+        # initialize figure
+        fig, ax = plt.subplots(ncols=2, figsize=(8, 4))
+
+        # scattering plot
+        ax[0].imshow(A[0], cmap=cm.Greys)
+        ax[0].set_xticks(ticks, [str(g) for g in ticks])
+        ax[0].set_yticks(ticks, [str(g) for g in ticks])
+        ax[0].set_title("Scattering Matrix")
+        ax[0].set_xlabel("Destination energy group")
+        ax[0].set_ylabel("Source energy group")
+        ax[0].xaxis.set_ticks_position("top")
+        ax[0].xaxis.set_label_position("top")
+
+        # fission plot
+        ax[1].imshow(A[1], cmap=cm.Greys)
+        ax[1].set_xticks(ticks, [str(g) for g in ticks])
+        ax[1].set_title("Fission Matrix")
+        ax[1].set_xlabel("Destination energy group")
+        ax[1].xaxis.set_ticks_position("top")
+        ax[1].xaxis.set_label_position("top")
 
         plt.tight_layout()
         plt.savefig("TransferMatrix_NJOY.png")
@@ -454,6 +517,7 @@ def build_combined_data(
         if n_gs:
             # plot cross-sections
             fig, ax = plt.subplots(ncols=2, figsize=(8, 4))
+            fig.suptitle("Neutron Cross-Sections")
             for iax in ax:
                 iax.set_xlabel("Energy (MeV)")
                 iax.set_ylabel("Cross-Section (b)")
@@ -485,6 +549,7 @@ def build_combined_data(
             # plot fission data
             if np.linalg.norm(sig_f) > 1.0e-20:
                 fig, ax = plt.subplots(ncols=2, figsize=(8, 4))
+                fig.suptitle("Neutron Fission Data")
                 for i, iax in enumerate(ax):
                     iax.set_xlabel("Energy (MeV)")
                     iax.set_ylabel("$\chi$ (MeV$^{-1}$)" if i == 0 else
@@ -502,7 +567,7 @@ def build_combined_data(
 
                 lines = [line0, line1, line2]
                 labels = ["Total", "Prompt", "Delayed"]
-                ax[1].legend(lines, labels)
+                ax[1].legend(lines, labels, loc='center left')
                 ax[1].grid(True)
 
                 plt.tight_layout()
@@ -511,6 +576,7 @@ def build_combined_data(
         if g_gs:
             # plot cross-sections
             plt.figure()
+            plt.title("Gamma Cross-Sections")
             plt.xlabel("Energy (MeV)")
             plt.ylabel("Cross-Section (b)")
             plt.semilogx(e_avg[G_n:], sig_t[G_n:], label=r"$\sigma_t$")
@@ -528,6 +594,7 @@ def build_combined_data(
             if np.linalg.norm(sig_f) > 1.0e-20 and n_gs:
 
                 fig, ax = plt.subplots(ncols=2, figsize=(8, 4))
+                fig.suptitle("Gamma Fission Data")
                 for i, iax in enumerate(ax):
                     iax.set_xlabel("Energy (MeV)")
                     iax.set_ylabel("$\chi$ (MeV$^{-1}$)" if i == 0 else
@@ -553,9 +620,9 @@ def build_combined_data(
 
         plt.show()
 
-    ###########################################################################
+    # ------------------------------------------------------------
     # Build return data
-    ###########################################################################
+    # ------------------------------------------------------------
 
     return_data = {"neutron_gs": n_gs,
                    "gamma_gs": g_gs,
@@ -577,7 +644,8 @@ def build_combined_data(
                    "inv_velocity": inv_v,
                    "avg_energy": e_avg,
                    "scattering_matrices": scattering_mats,
-                   "scattering_matrices_sparsity": scattering_mats_sparsity,
-                   "fission_matrices": fission_mat}
+                   "scattering_matrices_sparsity": scattering_sparsity,
+                   "fission_matrices": fission_mats,
+                   "fission_matrices_sparsity": fission_sparsity}
 
     return return_data, problem_description
