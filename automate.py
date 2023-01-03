@@ -6,6 +6,13 @@ import warnings
 from njoy_utilities import utils
 
 
+################################################################################
+class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
+                      argparse.MetavarTypeHelpFormatter,
+                      argparse.RawTextHelpFormatter):
+    pass
+
+
 if __name__ == "__main__":
 
     # ----------------------------------------------------------------------
@@ -15,7 +22,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=textwrap.dedent('''\
         A script for processing cross-sections for several isotopes.'''),
-        formatter_class=argparse.RawTextHelpFormatter,
+        formatter_class=CustomFormatter,
         epilog=textwrap.dedent('''\
         Notes
         -----
@@ -31,7 +38,9 @@ if __name__ == "__main__":
 
     parser.add_argument(
         '-m', '--materials',
-        type=str, nargs='*', required=True, metavar='str',
+        type=str,
+        nargs='*',
+        required=True,
         help=textwrap.dedent('''\
         A list of the desired materials.
         See the notes for specification instructions.
@@ -40,7 +49,9 @@ if __name__ == "__main__":
 
     parser.add_argument(
         '-gs', '--group_structures',
-        type=str, nargs='*', required=True, metavar='str',
+        type=str,
+        nargs='*',
+        required=True,
         help=textwrap.dedent('''\
         A list of the desired neutron, gamma, or neutron-gamma 
         group structures. If the latter, the group structures 
@@ -50,19 +61,25 @@ if __name__ == "__main__":
 
     parser.add_argument(
         '-t', '--temperatures',
-        type=float, nargs='*', default=[293.6], metavar='float',
+        type=float,
+        nargs='*',
+        default=[293.6],
         help="The desired temperatures."
     )
 
     parser.add_argument(
         '--no_thermal',
-        type=int, nargs='*', default=[], metavar='int',
+        type=int,
+        nargs='*',
+        default=[],
         help="The indices of the materials to exclude thermal treatment for."
     )
 
     parser.add_argument(
         '--option',
-        type=int, choices=[0, 1, 2], default=0, metavar='',
+        type=int,
+        choices=[0, 1, 2],
+        default=0,
         help=textwrap.dedent('''\
         The mode to run the script in.
         0 runs NJOY and creates a \'.xs\' file, 1 only runs NJOY, and
@@ -70,7 +87,9 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--plot", action='store_true', default=False,
+        "--plot",
+        action='store_true',
+        default=False,
         help="A flag for plotting."
     )
 

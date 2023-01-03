@@ -155,38 +155,38 @@ See spectrum_file.txt
 ''')
 
 argparser.add_argument(
-    "--njoy_executable",
+    '--njoy_executable',
     type=str,
-    default="njoy21",
+    default='njoy21',
     help="The NJOY executable"
 )
 
 argparser.add_argument(
-    "--path_to_neutron_endf",
+    '--path_to_neutron_endf',
     type=str,
     help="Path to an incident neutron ENDF file."
 )
 
 argparser.add_argument(
-    "--path_to_gamma_endf",
+    '--path_to_gamma_endf',
     type=str,
     help="Path the incident gamma ENDF file."
 )
 
 argparser.add_argument(
-    "--path_to_photoat_endf",
+    '--path_to_photoat_endf',
     type=str,
     help="Path to photo-atomic ENDF file."
 )
 
 argparser.add_argument(
-    "--path_to_sab_endf",
+    '--path_to_sab_endf',
     type=str,
     help="Path to S(alpha, beta) scattering ENDF file."
 )
 
 argparser.add_argument(
-    "--neutron_group_structure",
+    '--neutron_group_structure',
     type=int,
     default=3,
     choices=[*range(1, 35)],
@@ -197,7 +197,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--custom_neutron_gs_file",
+    '--custom_neutron_gs_file',
     type=str,
     help=textwrap.dedent('''\
     The path to the custom neutron group structure file.
@@ -205,7 +205,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--neutron_weight_function",
+    '--neutron_weight_function',
     type=int,
     default=6,
     choices=[*range(1, 13)],
@@ -216,7 +216,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--custom_neutron_wt_file",
+    '--custom_neutron_wt_file',
     type=str,
     help=textwrap.dedent('''\
     The path to the custom neutron weight function file.
@@ -224,7 +224,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--gamma_group_structure",
+    '--gamma_group_structure',
     type=int,
     default=0,
     choices=[*range(0, 11)],
@@ -235,7 +235,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--custom_gamma_gs_file",
+    '--custom_gamma_gs_file',
     type=str,
     help=textwrap.dedent('''\
     The path to the custom gamma group structure file.
@@ -243,7 +243,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--gamma_weight_function",
+    '--gamma_weight_function',
     type=int,
     default=3,
     choices=[*range(1, 4)],
@@ -254,7 +254,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--custom_gamma_wt_file",
+    '--custom_gamma_wt_file',
     type=str,
     help=textwrap.dedent('''\
     The path to the custom gamma weight function file.
@@ -262,47 +262,47 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--temperature",
+    '--temperature',
     type=float,
     default=296.0,
     help="The material temperature."
 )
 
 argparser.add_argument(
-    "--inelastic_thermal_number",
+    '--inelastic_thermal_number',
     type=int,
     help="MT number to use for incoherent inelastic scattering"
 )
 
 argparser.add_argument(
-    "--elastic_thermal_number",
+    '--elastic_thermal_number',
     type=int,
     help="MT number to use for coherent/incoherent elastic scattering"
 )
 
 argparser.add_argument(
-    "--inelastic_thermal_num_atoms",
+    '--inelastic_thermal_num_atoms',
     type=int,
     default=1,
     help="MT number to use for incoherent inelastic scattering",
 )
 
 argparser.add_argument(
-    "--no_thermal",
+    '--no_thermal',
     action="store_true",
     default=False,
     help="A flag for excluding any thermal scattering."
 )
 
 argparser.add_argument(
-    "--fissile",
+    '--fissile',
     action="store_true",
     default=False,
     help="A flag for fissile materials."
 )
 
 argparser.add_argument(
-    "--output_directory",
+    '--output_directory',
     type=str,
     default=os.getcwd(),
     help=textwrap.dedent('''\
@@ -311,7 +311,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--output_filename",
+    '--output_filename',
     type=str,
     help=textwrap.dedent('''\
     A filename to save the output to.
@@ -547,7 +547,7 @@ if argv.path_to_gamma_endf:
 # ----------------------------------------
 
 if argv.path_to_photoat_endf:
-    with open("tape70", "r") as endf:
+    with open("tape70", 'r') as endf:
         for _ in range(5):
             endf.readline()
 
@@ -561,7 +561,7 @@ if argv.path_to_photoat_endf:
 # ----------------------------------------
 
 if with_thermal and argv.path_to_sab_endf:
-    with open("tape50", "r") as endf:
+    with open("tape50", 'r') as endf:
         for _ in range(5):
             endf.readline()
 
@@ -584,7 +584,7 @@ if not output_filename:
 # Write NJOY input
 # ------------------------------------------------------------
 
-with open("NJOY_INPUT.txt", "w") as njoy_input:
+with open("NJOY_INPUT.txt", 'w') as njoy_input:
     njoy_input.write("-- Processing ENDF to PENDF\n")
 
     # ------------------------------------------------------------ MODER
@@ -730,21 +730,21 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
 
     # custom neutron group structure
     if argv.neutron_group_structure == 1:
-        with open(argv.custom_neutron_gs_file, "r") as wt_file:
+        with open(argv.custom_neutron_gs_file, 'r') as wt_file:
             for line in wt_file:
                 if line[0] != "#":
                     njoy_input.write(line)
 
     # custom gamma group structure
     if argv.gamma_group_structure == 1:
-        with open(argv.custom_gamma_gs_file, "r") as wt_file:
+        with open(argv.custom_gamma_gs_file, 'r') as wt_file:
             for line in wt_file:
                 if line[0] != "#":
                     njoy_input.write(line)
 
     # custom neutron weight function
     if argv.neutron_weight_function == 1:
-        with open(argv.custom_neutron_wt_file, "r") as wt_file:
+        with open(argv.custom_neutron_wt_file, 'r') as wt_file:
             for line in wt_file:
                 if line[0] != "#":
                     njoy_input.write(line)
@@ -823,21 +823,21 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
 
         # custom neutron group structure
         if argv.neutron_group_structure == 1:
-            with open(argv.custom_neutron_gs_file, "r") as wt_file:
+            with open(argv.custom_neutron_gs_file, 'r') as wt_file:
                 for line in wt_file:
                     if line[0] != "#":
                         njoy_input.write(line)
 
         # custom gamma group structure
         if argv.gamma_group_structure == 1:
-            with open(argv.custom_gamma_gs_file, "r") as wt_file:
+            with open(argv.custom_gamma_gs_file, 'r') as wt_file:
                 for line in wt_file:
                     if line[0] != "#":
                         njoy_input.write(line)
 
         # custom neutron weight function
         if argv.neutron_weight_function == 1:
-            with open(argv.custom_neutron_wt_file, "r") as wt_file:
+            with open(argv.custom_neutron_wt_file, 'r') as wt_file:
                 for line in wt_file:
                     if line[0] != "#":
                         njoy_input.write(line)
@@ -879,14 +879,14 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
 
         # custom gamma group structure
         if argv.gamma_group_structure == 1:
-            with open(argv.custom_gamma_gs_file, "r") as wt_file:
+            with open(argv.custom_gamma_gs_file, 'r') as wt_file:
                 for line in wt_file:
                     if line[0] != "#":
                         njoy_input.write(line)
 
         # custom gamma weight function
         if argv.gamma_weight_function == 1:
-            with open(argv.custom_gamma_wt_file, "r") as wt_file:
+            with open(argv.custom_gamma_wt_file, 'r') as wt_file:
                 for line in wt_file:
                     if line[0] != "#":
                         njoy_input.write(line)
@@ -901,10 +901,10 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
 
 os.system("rm -f out")
 if argv.njoy_executable == "njoy21":
-    cmd_line = argv.njoy_executable + " -i NJOY_INPUT.txt -o out"
+    cmd_line = f"{argv.njoy_executable} -i NJOY_INPUT.txt -o out"
 else:
-    cmd_line = argv.njoy_executable + " < NJOY_INPUT.txt"
-print("command line =", cmd_line)
+    cmd_line = f"{argv.njoy_executable} < NJOY_INPUT.txt"
+print(f"command line = {cmd_line}")
 
 os.system(cmd_line)
 os.system("rm tape* NJOY_INPUT.txt")

@@ -17,17 +17,17 @@ def build_combined_data(
 
     # -------------------------------------------------- raw njoy data
 
-    group_structures: dict = raw_njoy_data["group_structures"]
-    cross_sections: dict = raw_njoy_data["cross_sections"]
-    transfer_matrices: dict = raw_njoy_data["transfer_matrices"]
+    group_structures: dict = raw_njoy_data['group_structures']
+    cross_sections: dict = raw_njoy_data['cross_sections']
+    transfer_matrices: dict = raw_njoy_data['transfer_matrices']
 
     # -------------------------------------------------- number of groups
 
     n_gs, g_gs = [], []
-    if "neutron" in group_structures:
-        n_gs = group_structures["neutron"]
-    if "gamma" in group_structures:
-        g_gs = group_structures["gamma"]
+    if 'neutron' in group_structures:
+        n_gs = group_structures['neutron']
+    if 'gamma' in group_structures:
+        g_gs = group_structures['gamma']
 
     G_n = len(n_gs)
     G_g = len(g_gs)
@@ -38,18 +38,18 @@ def build_combined_data(
     problem_description = {}
     if n_gs:
         if g_gs:
-            problem_description["problem_type"] = "Neutron + Gamma"
+            problem_description['problem_type'] = "Neutron + Gamma"
         elif not g_gs:
-            problem_description["problem_type"] = "Neutron only"
+            problem_description['problem_type'] = "Neutron only"
     elif g_gs:
-        problem_description["problem_type"] = "Gamma only"
+        problem_description['problem_type'] = "Gamma only"
     else:
         problem_description["problem_type"] = "Unknown"
         print(problem_description)
         raise Exception("unknown particle type")
 
-    problem_description["G_n"] = G_n
-    problem_description["G_g"] = G_g
+    problem_description['G_n'] = G_n
+    problem_description['G_g'] = G_g
 
     # -------------------------------------------------- total xs
 

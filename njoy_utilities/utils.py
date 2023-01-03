@@ -44,10 +44,14 @@ def get_material_info(material: str) -> dict:
         warnings.warn("No photo-atomic ENDF file found.")
         photoat_endf = None
 
-    return {'isotope': isotope, 'molecule': molecule,
-            'atomic_number': Z, 'symbol': symbol, 'mass_number': A,
-            'neutron_endf': neutron_endf, 'gamma_endf': gamma_endf,
-            'photoat_endf': photoat_endf}
+    return {"isotope": isotope,
+            "molecule": molecule,
+            "atomic_number": Z,
+            "symbol": symbol,
+            "mass_number": A,
+            "neutron_endf": neutron_endf,
+            "gamma_endf": gamma_endf,
+            "photoat_endf": photoat_endf}
 
 
 ######################################################################
@@ -69,11 +73,11 @@ def get_thermal_info(element: str, molecule: str) -> dict:
     info = {}
     if element == "H" and molecule == "H2O":
         file_prefix = "HinH2O"
-        info['mti'] = 222
-        info['n_atoms'] = 2
+        info["mti"] = 222
+        info["n_atoms"] = 2
     elif element == "H" and molecule == "CH2":
         file_prefix = "HinCH2"
-        info['mti'] = 223
+        info["mti"] = 223
         info["mtc"] = 224
         info["n_atoms"] = 2
     elif element == "C" and molecule == "graphite":

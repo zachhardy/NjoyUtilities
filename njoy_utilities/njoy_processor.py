@@ -33,28 +33,28 @@ argparser = argparse.ArgumentParser(
 )
 
 argparser.add_argument(
-    "--output_directory",
+    '--output_directory',
     type=str,
     required=True,
     help="Complete path where to store the output.",
 )
 
 argparser.add_argument(
-    "--njoy_output_filename",
+    '--njoy_output_filename',
     type=str,
     required=True,
     help="Name of output file produced by NJOY."
 )
 
 argparser.add_argument(
-    "--xs_filename",
+    '--xs_filename',
     type=str,
     help="Name of XS file.",
 )
 
 argparser.add_argument(
-    "--plot",
-    action="store_true",
+    '--plot',
+    action='store_true',
     default=False,
     help="A flag for plotting the XS data."
 )
