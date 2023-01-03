@@ -48,14 +48,20 @@ def check_element_info(f):
         raise AssertionError("Different element encountered.")
 
 
-# -------------------------------------------------- Check Python version
+########################################################################
+
+# ------------------------------------------------------------
+# Check Python version
+# ------------------------------------------------------------
 
 if sys.version_info[0] < 3:
     print(f"\nError: This script requires python3 but was executed "
           f"with version:\n\n{sys.version}\n")
     sys.exit(1)
 
-# -------------------------------------------------- Define parser
+# ------------------------------------------------------------
+# Define parser
+# ------------------------------------------------------------
 
 argparser = argparse.ArgumentParser(
     description="Prepares input/output files "
@@ -314,7 +320,9 @@ argparser.add_argument(
 
 argv = argparser.parse_args()
 
-# -------------------------------------------------- Validate inputs
+# ------------------------------------------------------------
+# Validate inputs
+# ------------------------------------------------------------
 
 if argv.path_to_neutron_endf:
     if not os.path.isfile(argv.path_to_neutron_endf):
@@ -417,7 +425,9 @@ with_photoat = argv.path_to_photoat_endf is not None
 with_sab = argv.path_to_sab_endf is not None
 with_thermal = not argv.no_thermal
 
-# -------------------------------------------------- Tape reservations
+# ------------------------------------------------------------
+# Tape reservations
+# ------------------------------------------------------------
 
 # The following tape numbers are used:
 # neutron endf         20
@@ -443,7 +453,9 @@ with_thermal = not argv.no_thermal
 # moder print    input 64    output 65
 # moder print    input 73    output 74
 
-# -------------------------------------------------- display problem type
+# ------------------------------------------------------------
+# Display problem type
+# ------------------------------------------------------------
 
 if argv.path_to_neutron_endf:
     if argv.path_to_gamma_endf:
@@ -457,7 +469,9 @@ else:
         "A neutron or gamma ENDF file must be supplied."
     )
 
-# -------------------------------------------------- create input tapes
+# ------------------------------------------------------------
+# Create input tapes
+# ------------------------------------------------------------
 
 if argv.path_to_neutron_endf:
     os.system(f"ln -fs {argv.path_to_neutron_endf} tape20")
@@ -471,7 +485,9 @@ if argv.path_to_gamma_endf:
 if argv.path_to_photoat_endf:
     os.system(f"ln -fs {argv.path_to_photoat_endf} tape70")
 
-# -------------------------------------------------- get material info
+# ------------------------------------------------------------
+# Get material info
+# ------------------------------------------------------------
 
 atomic_num = None
 symbol = None
@@ -486,7 +502,10 @@ sab_material_number = None
 
 sab_material_name = None
 
-# ------------------------------ neutron endf
+# ----------------------------------------
+# Neutron ENDF
+# ----------------------------------------
+
 if argv.path_to_neutron_endf:
     with open("tape20", "r") as endf:
         for _ in range(5):
@@ -503,7 +522,10 @@ if argv.path_to_neutron_endf:
         print(f"neutron material number read: "
               f"{neutron_material_number}")
 
-# ------------------------------ photo-nuclear endf
+# ----------------------------------------
+# Photo-nuclear ENDF
+# ----------------------------------------
+
 if argv.path_to_gamma_endf:
     with open("tape60", "r") as endf:
         for _ in range(5):
@@ -520,7 +542,10 @@ if argv.path_to_gamma_endf:
         print(f"gamma material number read: "
               f"{gamma_material_number}")
 
-# ------------------------------ photo-atomic endf
+# ----------------------------------------
+# Photo-atomic ENDF
+# ----------------------------------------
+
 if argv.path_to_photoat_endf:
     with open("tape70", "r") as endf:
         for _ in range(5):
@@ -531,7 +556,10 @@ if argv.path_to_photoat_endf:
         print(f"photo-atomic material number read:"
               f"{photoat_material_number}")
 
-# ------------------------------ s(alpha, beta) endf
+# ----------------------------------------
+# s(alpha, beta) ENDF
+# ----------------------------------------
+
 if with_thermal and argv.path_to_sab_endf:
     with open("tape50", "r") as endf:
         for _ in range(5):
@@ -542,7 +570,9 @@ if with_thermal and argv.path_to_sab_endf:
         print(f"s(a, b) material {sab_material_name} read: "
               f"{sab_material_number}")
 
-# -------------------------------------------------- define output
+# ------------------------------------------------------------
+# Define outputs
+# ------------------------------------------------------------
 
 if not output_filename:
     output_filename = f"{symbol}{mass_num}{metastable}"
@@ -550,12 +580,14 @@ if not output_filename:
         output_filename = f"{output_filename}_freegas"
     output_filename = f"{output_filename}.txt"
 
-# -------------------------------------------------- write njoy input
+# ------------------------------------------------------------
+# Write NJOY input
+# ------------------------------------------------------------
 
 with open("NJOY_INPUT.txt", "w") as njoy_input:
     njoy_input.write("-- Processing ENDF to PENDF\n")
 
-    # -------------------------------------------------- MODER
+    # ------------------------------------------------------------ MODER
 
     njoy_input.write("moder\n")
     njoy_input.write("20 -21/\n")
@@ -566,7 +598,7 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
         njoy_input.write("moder\n")
         njoy_input.write("70 -71\n")
 
-    # -------------------------------------------------- RECONR
+    # ------------------------------------------------------------ RECONR
 
     njoy_input.write("reconr\n")
     njoy_input.write("-21 -22/\n")
@@ -591,7 +623,7 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
         njoy_input.write("0.001/\n")
         njoy_input.write("0/\n")
 
-    # -------------------------------------------------- BROADR
+    # ------------------------------------------------------------ BROADR
 
     njoy_input.write("broadr\n")
     njoy_input.write("-21 -22 -23/\n")
@@ -608,7 +640,7 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
         njoy_input.write(f"{argv.temperature}/\n")
         njoy_input.write("0/\n")
 
-    # -------------------------------------------------- UNRESR
+    # ------------------------------------------------------------ UNRESR
 
     njoy_input.write("unresr\n")
     njoy_input.write("-21 -23 -24/\n")
@@ -617,16 +649,16 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
     njoy_input.write("0.0/\n")
     njoy_input.write("0/\n")
 
-    # -------------------------------------------------- HEATR
+    # ------------------------------------------------------------ HEATR
 
     njoy_input.write("heatr\n")
     njoy_input.write("-21 -24 -25/\n")
     njoy_input.write(f"{neutron_material_number} 0/\n")
 
-    # -------------------------------------------------- THERMR
+    # ------------------------------------------------------------ THERMR
     if with_thermal:
 
-        # -------------------- free-gas
+        # ---------------------------------------- free-gas
         njoy_input.write("thermr\n")
         njoy_input.write("0 -25 -26/\n")
 
@@ -648,7 +680,7 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
         njoy_input.write("0.005 ")  # tolerance
         njoy_input.write("5.0/\n")  # max energy for thermal
 
-        # -------------------- S(alpha, beta)
+        # ---------------------------------------- S(alpha, beta)
         if with_sab:
             njoy_input.write("thermr\n")
             njoy_input.write("50 -26 -27/\n")
@@ -671,7 +703,7 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
             njoy_input.write("0.005 ")  # tolerance
             njoy_input.write("5.0/\n")  # maximum energy for thermal
 
-    # -------------------------------------------------- GROUPR
+    # ------------------------------------------------------------ GROUPR
 
     njoy_input.write("groupr\n")
     njoy_input.write("-21 -27 0 -28/\n"
@@ -831,7 +863,7 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
         njoy_input.write("0/\n")  # terminate reactions
         njoy_input.write("0/\n")  # terminate groupr
 
-    # -------------------------------------------------- GAMINR
+    # ------------------------------------------------------------ GAMINR
 
     if with_photoat:
         njoy_input.write("gaminr\n")
@@ -863,7 +895,9 @@ with open("NJOY_INPUT.txt", "w") as njoy_input:
         njoy_input.write("0/\n")  # terminal gaminr
     njoy_input.write("stop\n")
 
-# -------------------------------------------------- run njoy
+# ------------------------------------------------------------
+# Run NJOY
+# ------------------------------------------------------------
 
 os.system("rm -f out")
 if argv.njoy_executable == "njoy21":

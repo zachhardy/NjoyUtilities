@@ -328,7 +328,9 @@ def read_njoy_file(
             words = file_lines[line_num].split()
             num_words = len(words)
 
-            # ---------------------------------------- group structures
+            # --------------------------------------------------
+            # Parse group structures
+            # --------------------------------------------------
 
             if "sigma zeroes" in line:
                 group_structures["neutron"] = \
@@ -340,7 +342,9 @@ def read_njoy_file(
                         process_group_structure(line_num, file_lines)
                     flag_gamma_structure_processed = True
 
-            # ---------------------------------------- reactions
+            # --------------------------------------------------
+            # Stop on reaction data
+            # --------------------------------------------------
 
             if line.startswith("for mf") and "mt" in line:
 
@@ -353,7 +357,9 @@ def read_njoy_file(
                     mf = int(words[1].strip("mf"))
                     mt = int(words[3].strip("mt"))
 
-                # ------------------------------ standard xs data
+                # --------------------------------------------------
+                # Parse standard cross-section data
+                # --------------------------------------------------
 
                 if line.endswith("cross section"):
 
@@ -375,7 +381,9 @@ def read_njoy_file(
                         cross_sections[rxn] = \
                             process_cross_section(line_num, file_lines)
 
-                # ------------------------------ auxiliary data
+                # --------------------------------------------------
+                # Parse auxiliary (optional) data
+                # --------------------------------------------------
 
                 mtnames = ["inverse velocity", "average energy",
                            "free gas", "inelastic s(a,b)", "elastic s(a,b)",
@@ -388,7 +396,9 @@ def read_njoy_file(
                             cross_sections[rxn] = \
                                 process_cross_section(line_num, file_lines)
 
-                # ------------------------------ fission data
+                # --------------------------------------------------
+                # Parse fission data
+                # --------------------------------------------------
 
                 # prompt fission spectrum
                 if mf == 5 and "prompt chi" in line:
@@ -404,7 +414,9 @@ def read_njoy_file(
                     cross_sections[rxn] = \
                         process_delayed_chi(line_num, file_lines)
 
-                # ------------------------------ transfer matrices
+                # --------------------------------------------------
+                # Parse transfer matrices
+                # --------------------------------------------------
 
                 # caveat:
                 #   the pp values from transfer(mf26) = 2x the pp
@@ -427,7 +439,9 @@ def read_njoy_file(
                     transfer_matrices[particle][rxn] = \
                         process_transfer_matrix(line_num, file_lines)
 
-                # ------------------------------ photo-atomic cross-sections
+                # --------------------------------------------------
+                # Parse photo-atomic cross-sections
+                # --------------------------------------------------
 
                 # Total photon interaction
                 if mf == 23 and mt == 501:
@@ -460,7 +474,9 @@ def read_njoy_file(
                     cross_sections["(g,heat)"] = \
                         process_cross_section(line_num, file_lines)
 
-                # ------------------------------ photo-atomic transfer matrices
+                # --------------------------------------------------
+                # Parse photo-atomic transfer matrices
+                # --------------------------------------------------
 
                 if mf == 26 and mt == 502:
                     transfer_matrices["gamma"]["(g,coherent)"] = \

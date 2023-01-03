@@ -5,6 +5,7 @@ import textwrap
 import warnings
 
 
+######################################################################
 def get_material_info(material: str) -> dict:
     """
     Return the ENDF paths for a particular material input.
@@ -49,6 +50,7 @@ def get_material_info(material: str) -> dict:
             'photoat_endf': photoat_endf}
 
 
+######################################################################
 def get_thermal_info(element: str, molecule: str) -> dict:
     """
     Return the thermal scattering parameters, including the
@@ -92,6 +94,7 @@ def get_thermal_info(element: str, molecule: str) -> dict:
     return info
 
 
+######################################################################
 def get_group_structure_info(group_structures: list[str]) -> dict:
     """
     Return the NJOY group structure inputs.
@@ -111,7 +114,10 @@ def get_group_structure_info(group_structures: list[str]) -> dict:
     info = {"outdir": "output/ENDF-B-VIII-0",
             "neutron": {}, "gamma": {}}
 
-    # ------------------------------ find present group structures
+    # ------------------------------------------------------------
+    # Find present group structures
+    # ------------------------------------------------------------
+
     neutron_gs, gamma_gs = None, None
     for gs in group_structures:
         if gs.endswith("n"):
@@ -123,7 +129,10 @@ def get_group_structure_info(group_structures: list[str]) -> dict:
                 "Unrecognized group structure specification."
             )
 
-    # ------------------------------ define the output directory
+    # ------------------------------------------------------------
+    # Define the output directory
+    # ------------------------------------------------------------
+
     if neutron_gs and gamma_gs:
         outdir = f"{neutron_gs}_{gamma_gs}"
     elif neutron_gs and not gamma_gs:
@@ -134,7 +143,10 @@ def get_group_structure_info(group_structures: list[str]) -> dict:
         raise AssertionError("No neutron or gamma group structure found.")
     info["outdir"] = os.path.join(info["outdir"], outdir)
 
-    # ------------------------------ define the neutron NJOY input
+    # ------------------------------------------------------------
+    # Define the neutron NJOY input
+    # ------------------------------------------------------------
+
     if neutron_gs:
 
         # custom group structures
@@ -165,7 +177,10 @@ def get_group_structure_info(group_structures: list[str]) -> dict:
         else:
             raise ValueError("Invalid neutron group structure.")
 
-    # ------------------------------ define gamma NJOY input
+    # ------------------------------------------------------------
+    # Define gamma NJOY input
+    # ------------------------------------------------------------
+
     if gamma_gs:
 
         # custom group structures

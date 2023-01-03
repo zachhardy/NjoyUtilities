@@ -5,9 +5,14 @@ import warnings
 import numpy as np
 
 
-# ===================================================================
+######################################################################
 def write_xs_file(data, full_path, problem_description):
     with open(full_path, "w") as xsf:
+
+        # --------------------------------------------------
+        # Write header
+        # --------------------------------------------------
+
         xsf.write("#========== Problem Description ==========" + "\n")
 
         n_group = problem_description["G_n"]
@@ -22,7 +27,10 @@ def write_xs_file(data, full_path, problem_description):
             xsf.write(f"# Gamma group structure: {g_group} groups\n")
         xsf.write("\n")
 
-        # ============================
+        # --------------------------------------------------
+        # Get data
+        # --------------------------------------------------
+
         sig_t = data["sigma_t"]
         sig_a = data["sigma_a"]
         sig_s = data["sigma_s"]
@@ -44,6 +52,10 @@ def write_xs_file(data, full_path, problem_description):
         neutron_gs = data["neutron_gs"]
         gamma_gs = data["gamma_gs"]
 
+        # --------------------------------------------------
+        # Write general info
+        # --------------------------------------------------
+
         G = n_group + g_group
         M = len(transfer_mats)
         J = len(decay_const['neutron'])
@@ -53,6 +65,10 @@ def write_xs_file(data, full_path, problem_description):
         xsf.write(f"NUM_MOMENTS {M}\n")
         xsf.write(f"NUM_PRECURSORS {J}\n")
         xsf.write("\n")
+
+        # --------------------------------------------------
+        # Write group structures
+        # --------------------------------------------------
 
         if neutron_gs:
             # print(n_group, len(neutron_gs))
@@ -78,6 +94,10 @@ def write_xs_file(data, full_path, problem_description):
         for g in range(G):
             xsf.write(f"{g:<4d} {E_avg[g]:<12.8g}\n")
         xsf.write("AVG_ENERGY_END\n\n")
+
+        # --------------------------------------------------
+        # Write reaction data
+        # --------------------------------------------------
 
         xsf.write("SIGMA_T_BEGIN\n")
         for g in range(G):

@@ -14,14 +14,18 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
     pass
 
 
-# -------------------------------------------------- check python version
+# ------------------------------------------------------------
+# Check Python version
+# ------------------------------------------------------------
 
 if sys.version_info[0] < 3:
     print("\n Error: This script requires python3 but was executed "
           "with version:\n\n"+sys.version+"\n")
     sys.exit(1)
 
-# -------------------------------------------------- create parser
+# ------------------------------------------------------------
+# Create parser
+# ------------------------------------------------------------
 
 argparser = argparse.ArgumentParser(
     description="Executes the main steps of conversion",
@@ -65,7 +69,9 @@ if not os.path.isdir(output_directory):
     )
     os.makedirs(output_directory)
 
-# -------------------------------------------------- read njoy output
+# ------------------------------------------------------------
+# Read NJOY output
+# ------------------------------------------------------------
 
 njoy_output_path = os.path.join(
     output_directory, "njoy", argv.njoy_output_filename
@@ -76,9 +82,11 @@ raw_njoy_data = read_njoy_outputs.read_njoy_file(
     njoy_output_path, verbose=True
 )
 
-# -------------------------------------------------- combine disjoint data
+# ------------------------------------------------------------
+# Combine raw data
+# ------------------------------------------------------------
 
-print("\nCombining disjoint data...")
+print("\nCombining raw data...")
 
 data, problem_description = combiner.build_combined_data(
     raw_njoy_data, plot=argv.plot
@@ -92,7 +100,9 @@ print(f"\nProblem Description:")
 for key, val in problem_description.items():
     print(f"{key:<15}: {val}")
 
-# -------------------------------------------------- Write cross-section file
+# ------------------------------------------------------------
+# Write cross-section file
+# ------------------------------------------------------------
 
 if len(argv.xs_filename) == 0:
     # generate name automatically
@@ -113,7 +123,9 @@ xs_writer.write_xs_file(
     data, xs_output_path, problem_description
 )
 
-# -------------------------------------------------- Move plots
+# ------------------------------------------------------------
+# Move plots
+# ------------------------------------------------------------
 
 if argv.plot:
     import os
