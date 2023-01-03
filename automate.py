@@ -8,9 +8,9 @@ from njoy_utilities import utils
 
 if __name__ == "__main__":
 
-    # ------------------------------------------------------------
+    # ----------------------------------------------------------------------
     # Setup Command-Line Interface
-    # ------------------------------------------------------------
+    # ----------------------------------------------------------------------
 
     parser = argparse.ArgumentParser(
         description=textwrap.dedent('''\
@@ -76,18 +76,18 @@ if __name__ == "__main__":
 
     argv = parser.parse_args()
 
-    # ------------------------------------------------------------
-    # Loop Over Materials
-    # ------------------------------------------------------------
+    # ----------------------------------------------------------------------
+    # Loop over specified materials
+    # ----------------------------------------------------------------------
 
     for m, material in enumerate(argv.materials):
         material: str = material
         if material.count('-') < 2:
             raise ValueError("Invalid material specification.")
 
-        # ----------------------------------------
-        # Parse Material
-        # ----------------------------------------
+        # ------------------------------------------------------------
+        # Parse material info
+        # ------------------------------------------------------------
 
         material_info = utils.get_material_info(material)
         symbol = material_info['symbol']
@@ -97,9 +97,9 @@ if __name__ == "__main__":
         gamma_endf = material_info['gamma_endf']
         photoat_endf = material_info['photoat_endf']
 
-        # ----------------------------------------
-        # Parse Thermal Options
-        # ----------------------------------------
+        # ------------------------------------------------------------
+        # Parse thermal options
+        # ------------------------------------------------------------
 
         # check whether thermal scattering is included
         with_thermal = m not in argv.no_thermal
@@ -109,9 +109,9 @@ if __name__ == "__main__":
         if molecule and with_thermal:
             sab_info = utils.get_thermal_info(symbol, molecule)
 
-        # ----------------------------------------
-        # Loop Over Group Structures
-        # ----------------------------------------
+        # ------------------------------------------------------------
+        # Loop over specified group structures
+        # ------------------------------------------------------------
 
         for gs in argv.group_structures:
             gs_list = gs.split('-')
@@ -119,9 +119,9 @@ if __name__ == "__main__":
 
             gs_outdir = gs_info['outdir']
 
-            # ----------------------------------------
-            # Loop over temperatures
-            # ----------------------------------------
+            # --------------------------------------------------
+            # Loop over specified temperatures
+            # --------------------------------------------------
 
             for temperature in argv.temperatures:
 
@@ -142,16 +142,12 @@ if __name__ == "__main__":
 
                 outdir = os.path.join(gs_outdir, temperature_name)
 
-                # ----------------------------------------
-                # Prepare Output Location
-                # ----------------------------------------
+                # --------------------------------------------------
+                # Prepare output location
+                # --------------------------------------------------
 
                 os.makedirs(outdir, exist_ok=True)
                 outdir = os.path.abspath(outdir)
-
-                # ----------------------------------------
-                # Define Filename
-                # ----------------------------------------
 
                 filename = material_info['symbol']
                 filename += str(material_info['mass_number'])
@@ -160,9 +156,9 @@ if __name__ == "__main__":
                     suffix = suffix if suffix else "freegas"
                     filename = f"{filename}_{suffix}"
 
-                # ----------------------------------------
-                # Print Summary
-                # ----------------------------------------
+                # --------------------------------------------------
+                # Print summary
+                # --------------------------------------------------
 
                 msg = f"Processing isotope {isotope}, "
                 if molecule:
@@ -170,15 +166,18 @@ if __name__ == "__main__":
                 msg += f"temperature {temperature_name}..."
                 print(msg)
 
-                # ----------------------------------------
-                # Write the Run and Process Script
-                # ----------------------------------------
+                # --------------------------------------------------
+                # Write the run and process script
+                # --------------------------------------------------
                 with open("tmp.sh", "w") as f:
 
                     f.write("CWD=\"$PWD\"\n")
                     f.write("cd njoy_utilities || exit\n\n")
 
-                    # -------------------- run njoy block
+                    # ----------------------------------------
+                    # Run NJOY block
+                    # ----------------------------------------
+
                     f.write(
                         "if [[ $1 == '0' ]] || [[ $1 == '1' ]]\n"
                         "then\n"
@@ -249,7 +248,10 @@ if __name__ == "__main__":
                     f.write(njoy)
                     f.write("fi\n\n")
 
-                    # -------------------- processor block
+                    # ----------------------------------------
+                    # NJOY Processor block
+                    # ----------------------------------------
+
                     f.write(
                         "if [[ $1 == '0' ]] || [[ $1 == '2' ]]\n"
                         "then\n"
