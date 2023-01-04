@@ -202,7 +202,7 @@ def write_xs_file(data, full_path, problem_description):
         # xsf.write("PRODUCTION_MATRIX_BEGIN\n")
         # for gp in range(G):
         #     for g in fission_mats_nonzeros[0][gp]:
-        #         xsf.write("GPRIME_G_VAL ")
-        #         xsf.write(f"{gp:<4d} {g:<4d} ")
+        #         xsf.write("M_GPRIME_G_VAL ")
+        #         xsf.write(f"0 {gp:<4d} {g:<4d} ")
         #         xsf.write(f"{fission_mats[0][gp][g]:<g}\n")
         # xsf.write("PRODUCTION_MATRIX_END\n")
