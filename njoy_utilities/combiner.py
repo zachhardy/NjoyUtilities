@@ -465,11 +465,44 @@ def build_combined_data(
         fission_sparsity.append(nonzeros)
 
     # ------------------------------------------------------------
+    # Checks
+    # ------------------------------------------------------------
+
+    # When formatted as (source, destination), a row denotes the
+    # production cross-section of the source group times the
+    # probability of a neutron scattering into each destination
+    # group. Because the latter sums to unity, summing across the
+    # row yields the production cross-section. On the contrary,
+    # dividing each row by the production cross-section yields the
+    # fission spectrum for the particular source group. Each of
+    # these should sum to unity (there cannot be a total probability
+    # greater than 1)
+
+    nu_sig_f = np.sum(fission_mats[0], axis=1)
+    chi_p = fission_mats[0] / nu_sig_f[:, np.newaxis]
+
+    nz = nu_sig_f > 0.0
+    prod_error = np.abs(nu_sig_f[nz] - nu_prompt[nz] * sig_f[nz]) / \
+                 np.abs(nu_prompt[nz] * sig_f[nz])
+
+    if any(prod_error > 1.0e-4):
+        raise AssertionError(
+            "Abnormally large difference in the production "
+            "cross-section computed from the production matrix "
+            "and its vector counterpart."
+        )
+
+    if any(np.abs(np.sum(chi_p, axis=1) - 1.0) > 1.0e-3):
+        raise AssertionError(
+            "Not all prompt fission spectra summed to unity."
+        )
+
+    # ------------------------------------------------------------
     # Plotting
     # ------------------------------------------------------------
 
     if plot:
-        A = [np.copy(scattering_mats[0]), np.copy(fission_mats[0])]
+        A = [np.copy(scattering_mats[0]).T, np.copy(fission_mats[0]).T]
         nz = [np.nonzero(a) for a in A]
         for i in range(2):
             A[i][nz[i]] = np.log10(A[i][nz[i]]) + 10.0
@@ -498,8 +531,8 @@ def build_combined_data(
         ax[0].set_xticks(ticks, [str(g) for g in ticks])
         ax[0].set_yticks(ticks, [str(g) for g in ticks])
         ax[0].set_title("Scattering Matrix")
-        ax[0].set_xlabel("Destination energy group")
-        ax[0].set_ylabel("Source energy group")
+        ax[0].set_xlabel("Source energy group")
+        ax[0].set_ylabel("Destination energy group")
         ax[0].xaxis.set_ticks_position("top")
         ax[0].xaxis.set_label_position("top")
 
@@ -507,7 +540,7 @@ def build_combined_data(
         ax[1].imshow(A[1], cmap=cm.Greys)
         ax[1].set_xticks(ticks, [str(g) for g in ticks])
         ax[1].set_title("Fission Matrix")
-        ax[1].set_xlabel("Destination energy group")
+        ax[1].set_xlabel("Source energy group")
         ax[1].xaxis.set_ticks_position("top")
         ax[1].xaxis.set_label_position("top")
 

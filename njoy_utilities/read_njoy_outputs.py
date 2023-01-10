@@ -234,13 +234,12 @@ def process_transfer_matrix(
 
     Returns
     -------
-    A table containing the group wise transfer coefficients.
+    A table containing the group-wise transfer coefficients.
     """
     # go to the first line of informative data
     skip = 1 if "mf26" in lines[n] else 0
     skip += 1 if "particle emission" in lines[n + 1] else 0
-    skip += 4 if "spectrum constant" in lines[n + 2] else 2
-    n += skip
+    n += skip + 2
 
     # determine matrix type
     if "legendre" in lines[n]:
@@ -248,30 +247,48 @@ def process_transfer_matrix(
     elif "isotropic" in lines[n]:
         matrix_type = "isotropic"
     else:
-        raise ValueError("Unexpected line encountered.")
+        raise ValueError(
+            "Unexpected line encountered when trying to "
+            "determine the matrix type."
+        )
     n += 3
     words = lines[n].strip().split()
 
     # parse the data
     matrix = []
-    while not lines[n].strip().startswith("group constants"):
+    while len(words) > 2:
 
-        # In fission matrices, there are lines with
-        # `spec` and `prod`, and in some gamma matrices there are lines
-        # with `xs` and `heat`. The try/except block ensures that these
-        # lines are safely passed over without having to explicitly
-        # hard-code the words to skip
+        # There are several cases in which an incompatible line
+        # exists within transfer matrix data. Using a try/except
+        # block allows these lines to be skipped without the
+        # need to define a list a "buzzwords" to look for. The
+        # known cases of bad lines are:
+        # 1)
+        #       For MF26 data, sometimes there is an additional line
+        #       containing the group-wise cross-section. This has the
+        #       word "xsec" within the line.
+        # 2)
+        #       For MF26 data, sometimes there is an additional line
+        #       containing the heating cross-section. This has the word
+        #       "heat" within the line.
+        # 3)
+        #     For (n,xn) reactions there are occasionally lines that
+        #     feature a normalization value. This has the word
+        #     "normalization" within the line.
+
         try:
+            # parse the line
             gprime = int(words[0]) - 1
             group = int(words[1]) - 1
             vals = [string_to_float(val) for val in words[2:]]
 
-            # check next line
+            # check next line, if overflow present
             if overflow:
                 n += 1
                 words = lines[n].strip().split()
                 vals.extend([string_to_float(val) for val in words])
 
+            # store the line data
             if matrix_type == "legendre":
                 matrix.append((gprime, group, vals))
             else:
@@ -281,6 +298,126 @@ def process_transfer_matrix(
         except (ValueError, IndexError):
             pass
 
+        # go to next line
+        n += 1
+        words = lines[n].strip().split()
+
+    return matrix
+
+
+###############################################################################
+def process_fission_matrix(
+        n: int,
+        lines: list[str]
+) -> RawTransferMatrix:
+    """
+    Read a fission matrix.
+
+    Parameters
+    ----------
+    n : int, File line number before data starts.
+    lines : list[str], The list of lines in the file.
+
+    Returns
+    -------
+    A table containing the group-wise production coefficients.
+    """
+    n += 4 if "spectrum constant" in lines[n + 2] else 2
+
+    # determine matrix type
+    if "legendre" in lines[n]:
+        matrix_type = "legendre"
+    elif "isotropic" in lines[n]:
+        matrix_type = "isotropic"
+    else:
+        raise AssertionError(
+            "Unexpected line encountered when trying to "
+            "determine the matrix type."
+        )
+
+    # initialize the matrix
+    matrix = []
+
+    # go to the start of low energy data
+    n += 3
+    words = lines[n].strip().split()
+    if words[0] == "spec":
+
+        # read the spectrum data
+        spec = []
+        group = 1
+        while words and words[0] == "spec":
+            expected_group = int(words[1])
+            if expected_group != group:
+                raise AssertionError(
+                    "The current group and the expected starting "
+                    "group for this line are different."
+                )
+
+            # parse the data
+            group += len(words[2:])
+            spec.extend([string_to_float(val) for val in words[2:]])
+
+            # go to next line
+            n += 1
+            words = lines[n].strip().split()
+
+        # go to the start of the low energy production data
+        n += 1
+        words = lines[n].strip().split()
+        if words and words[1] != "prod":
+            raise AssertionError(
+                "Unexpected line encountered when trying to "
+                "read the low energy vector production data."
+            )
+        elif not words:
+            return
+
+        # read the production data
+        prod = []
+        group = 1
+        while words and words[1] == "prod":
+            expected_group = int(words[0])
+            if expected_group != group:
+                raise AssertionError(
+                    "The current group and expected starting "
+                    "group for this line are different."
+                )
+
+            # parse the data
+            group += len(words[2:])
+            prod.extend([string_to_float(val) for val in words[2:]])
+
+            # go to next line
+            n += 1
+            words = lines[n].strip().split()
+
+        # initialize the matrix with the outer product
+        for group in range(len(spec)):
+            for gprime in range(len(prod)):
+                val = spec[group] * prod[gprime]
+                matrix.append((gprime, group, [val]))
+
+        # go to the start of the fission matrix
+        n += 1
+        words = lines[n].strip().split()
+
+    # parse the data
+    while len(words) > 2:
+
+        # parse the line
+        gprime = int(words[0]) - 1
+        group = int(words[1]) - 1
+        vals = [string_to_float(val) for val in words[2:]]
+
+        # store the line data
+        if matrix_type == "legendre":
+            matrix.append((gprime, group, vals))
+        else:
+            for g in range(len(vals)):
+                matrix.append((gprime, group + g, [vals[g]]))
+
+        # go to next line
         n += 1
         words = lines[n].strip().split()
     return matrix
@@ -431,13 +568,17 @@ def read_njoy_file(
                     particle = words[num_words - 2]
                     rxn = words[num_words - 3]
 
-                    if "free gas" in line:
-                        rxn = "free gas"
-                    if "s(a,b)" in line:
-                        rxn = f"{words[num_words - 4]} s(a,b)"
+                    if "fission" not in line:
+                        if "free gas" in line:
+                            rxn = "free gas"
+                        if "s(a,b)" in line:
+                            rxn = f"{words[num_words - 4]} s(a,b)"
 
-                    transfer_matrices[particle][rxn] = \
-                        process_transfer_matrix(line_num, file_lines)
+                        transfer_matrices[particle][rxn] = \
+                            process_transfer_matrix(line_num, file_lines)
+                    else:
+                        transfer_matrices[particle][rxn] = \
+                            process_fission_matrix(line_num, file_lines)
 
                 # --------------------------------------------------
                 # Parse photo-atomic cross-sections
