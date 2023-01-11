@@ -48,7 +48,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        '-gs', '--group_structures',
+        '-gs', '--group-structures',
         type=str,
         nargs='*',
         required=True,
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        '--no_thermal',
+        '--no-thermal',
         type=int,
         nargs='*',
         default=[],
