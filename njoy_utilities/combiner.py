@@ -19,19 +19,19 @@ def build_combined_data(
     # Get raw NJOY data
     # ------------------------------------------------------------
 
-    group_structures: dict = raw_njoy_data['group_structures']
-    cross_sections: dict = raw_njoy_data['cross_sections']
-    transfer_matrices: dict = raw_njoy_data['transfer_matrices']
+    group_structures: dict = raw_njoy_data["group_structures"]
+    cross_sections: dict = raw_njoy_data["cross_sections"]
+    transfer_matrices: dict = raw_njoy_data["transfer_matrices"]
 
     # ------------------------------------------------------------
     # Number of groups
     # ------------------------------------------------------------
 
     n_gs, g_gs = [], []
-    if 'neutron' in group_structures:
-        n_gs = group_structures['neutron']
-    if 'gamma' in group_structures:
-        g_gs = group_structures['gamma']
+    if "neutron" in group_structures:
+        n_gs = group_structures["neutron"]
+    if "gamma" in group_structures:
+        g_gs = group_structures["gamma"]
 
     G_n = len(n_gs)
     G_g = len(g_gs)
@@ -44,18 +44,17 @@ def build_combined_data(
     problem_description = {}
     if n_gs:
         if g_gs:
-            problem_description['problem_type'] = "Neutron + Gamma"
+            problem_description["type"] = "Neutron + Gamma"
         elif not g_gs:
-            problem_description['problem_type'] = "Neutron only"
+            problem_description["type"] = "Neutron"
     elif g_gs:
-        problem_description['problem_type'] = "Gamma only"
+        problem_description["type"] = "Gamma"
     else:
-        problem_description["problem_type"] = "Unknown"
-        print(problem_description)
-        raise Exception("unknown particle type")
+        problem_description["type"] = "Unknown"
+        raise Exception("Unknown particle type")
 
-    problem_description['G_n'] = G_n
-    problem_description['G_g'] = G_g
+    problem_description["G_n"] = G_n
+    problem_description["G_g"] = G_g
 
     # ------------------------------------------------------------
     # Total cross-sections
@@ -198,8 +197,8 @@ def build_combined_data(
             inv_v[G_n - g - 1] = v
 
     e_avg = np.zeros(G)
-    for particle in ['neutron', 'gamma']:
-        ref = G_n if particle == 'neutron' else G_n + G_g
+    for particle in ["neutron", "gamma"]:
+        ref = G_n if particle == "neutron" else G
         if f"average energy ({particle})" in cross_sections:
             data = cross_sections[f"average energy ({particle})"]
             for entry in data:
@@ -337,7 +336,7 @@ def build_combined_data(
     # Always operates on transfer_mats
     def add_transfer_neutron(data_values, dst, cross_particle=False):
         for data_value in data_values:
-            G_ref = G_n if not cross_particle else G_n + G_g
+            G_ref = G_n if not cross_particle else G
             gprime = G_ref - data_value[0] - 1
             group = G_n - data_value[1] - 1
             num_moms = len(data_value[2])
@@ -349,9 +348,9 @@ def build_combined_data(
     # Always operates on transfer_mats
     def add_transfer_gamma(data_values, dst, cross_particle=False):
         for data_value in data_values:
-            G_ref = G_n + G_g if not cross_particle else G_n
+            G_ref = G if not cross_particle else G_n
             gprime = G_ref - data_value[0] - 1
-            group = G_n + G_g - data_value[1] - 1
+            group = G - data_value[1] - 1
 
             # Determine number of moments
             num_moms = len(data_value[2])
@@ -368,6 +367,8 @@ def build_combined_data(
     scattering_mats = np.zeros((M, G, G))
     for particle, transfers in transfer_matrices.items():
         for rxn_type, data in transfers.items():
+            if not data:
+                continue
 
             # ----------------------------------------
             # Scattering matrix
@@ -405,6 +406,21 @@ def build_combined_data(
                 elif particle == "gamma":
                     if "n," in rxn_type:
                         add_transfer_gamma(data, fission_mats, True)
+
+    # Hard coded check for (g,fission) neutron matrix.
+    # In all NJOY outputs encountered thus far, this reaction has only
+    # specified the spectrum. This bit of code checks that 1) the
+    # (g,fission) neutron matrix was preent in the NJOY output, and 2) that
+    # it only contained the spectrum. When this is the case, the outer
+    # product fission matrix is computed.
+
+    if "(g,fission)" in transfer_matrices["neutron"] and \
+            not transfer_matrices["neutron"]["(g,fission)"]:
+        for g in range(G_n):
+            for gp in range(G_g):
+                fission_mats[0][G_n + gp][g] += \
+                    chi_prompt["gamma"][g] * \
+                    nu_prompt[G_n + gp] * sig_f[G_n + gp]
 
     # ------------------------------------------------------------
     # Apply thermal treatment
@@ -470,7 +486,7 @@ def build_combined_data(
 
     # When formatted as (source, destination), a row denotes the
     # production cross-section of the source group times the
-    # probability of a neutron scattering into each destination
+    # probability of a particle scattering into each destination
     # group. Because the latter sums to unity, summing across the
     # row yields the production cross-section. On the contrary,
     # dividing each row by the production cross-section yields the
@@ -478,13 +494,11 @@ def build_combined_data(
     # these should sum to unity (there cannot be a total probability
     # greater than 1)
 
-    nu_sig_f = np.sum(fission_mats[0], axis=1)
-    chi_p = fission_mats[0] / nu_sig_f[:, np.newaxis]
-
-    nz = nu_sig_f > 0.0
-    prod_error = np.abs(nu_sig_f[nz] - nu_prompt[nz] * sig_f[nz]) / \
-                 np.abs(nu_prompt[nz] * sig_f[nz])
-
+    # checks for neutron-neutron fission
+    nn_fission = fission_mats[0][:G_n, :G_n]
+    nu_sig_f = nu_prompt[:G_n] * sig_f[:G_n]
+    estimate = np.sum(nn_fission, axis=1)
+    prod_error = np.abs(estimate - nu_sig_f) / np.abs(nu_sig_f)
     if any(prod_error > 1.0e-4):
         raise AssertionError(
             "Abnormally large difference in the production "
@@ -492,10 +506,48 @@ def build_combined_data(
             "and its vector counterpart."
         )
 
-    if any(np.abs(np.sum(chi_p, axis=1) - 1.0) > 1.0e-3):
+    spectra = nn_fission / estimate[:, np.newaxis]
+    if any(np.abs(np.sum(spectra, axis=1) - 1.0) > 1.0e-4):
         raise AssertionError(
             "Not all prompt fission spectra summed to unity."
         )
+
+    # checks for gamma-neutron fission
+    gn_fission = fission_mats[0][G_n:, :G_n]
+    nu_sig_f = nu_prompt[G_n:] * sig_f[G_n:]
+    estimate = np.sum(gn_fission, axis=1)
+
+    nz = nu_sig_f > 0.0
+    prod_error = np.abs(estimate[nz] - nu_sig_f[nz]) / np.abs(nu_sig_f[nz])
+    if any(prod_error > 1.0e-4):
+        raise AssertionError(
+            "Abnormally large difference in the production "
+            "cross-section computed from the production matrix "
+            "and its vector counterpart."
+        )
+
+    spectra = gn_fission[nz] / estimate[nz, np.newaxis]
+    if any(np.abs(np.sum(spectra, axis=1) - 1.0) > 1.0e-3):
+        raise AssertionError(
+            "Not all prompt fission spectra summed to unity."
+        )
+
+    # NOTE: No checks for neutron-gamma fission can be performed because
+    # there is no vector data for gammas per fission. Instead, here are
+    # some printouts to see if the data looks reasonable. A normal number
+    # of gammas per neutron-induced fission is usually between 7 and 12.
+
+    # ng_fission = fission_mats[0][:G_n, G_n:]
+    # nu_sigf = np.sum(ng_fission, axis=1)
+    # print("Gamma production cross-section:")
+    # print(nu_sigf)
+    # print()
+    # print("Prompt gammas per neutron-induced fission:")
+    # print(nu_sigf / sig_f[:G_n])
+    # print()
+
+    # NOTE: No gamma-gamma fission data exists, nor can it be estimated
+    # from other quantities due to the lack of gamma per fission data.
 
     # ------------------------------------------------------------
     # Plotting
@@ -520,8 +572,10 @@ def build_combined_data(
             ticks = np.arange(0, G, 12)
         elif 121 <= G < 201:
             ticks = np.arange(0, G, 20)
-        else:
+        elif 201 <= G < 401:
             ticks = np.arange(0, G, 50)
+        else:
+            ticks = np.arange(0, G, 100)
 
         # initialize figure
         fig, ax = plt.subplots(ncols=2, figsize=(8, 4))
@@ -600,7 +654,7 @@ def build_combined_data(
 
                 lines = [line0, line1, line2]
                 labels = ["Total", "Prompt", "Delayed"]
-                ax[1].legend(lines, labels, loc='center left')
+                ax[1].legend(lines, labels, loc="center left")
                 ax[1].grid(True)
 
                 plt.tight_layout()

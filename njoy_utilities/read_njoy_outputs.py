@@ -365,13 +365,19 @@ def process_fission_matrix(
         # go to the start of the low energy production data
         n += 1
         words = lines[n].strip().split()
-        if words and words[1] != "prod":
+
+        # If no production data is found, exit, this matrix should
+        # be formed using an outer product formulation with prompt chi,
+        # prompt nubar, and the fission cross-section.
+        if not words:
+            return
+
+        # Otherwise, expect to see the "prod" keyword.
+        elif words and words[1] != "prod":
             raise AssertionError(
                 "Unexpected line encountered when trying to "
                 "read the low energy vector production data."
             )
-        elif not words:
-            return
 
         # read the production data
         prod = []
@@ -564,10 +570,12 @@ def read_njoy_file(
                 # caveat:
                 #   the n,3n values from transfer(mf8/mt17) = 3x the n,3n
                 #   from the xsec(mf3/mt17
+
                 if line.endswith("matrix"):
                     particle = words[num_words - 2]
                     rxn = words[num_words - 3]
 
+                    # parse scattering matrices
                     if "fission" not in line:
                         if "free gas" in line:
                             rxn = "free gas"
@@ -576,6 +584,8 @@ def read_njoy_file(
 
                         transfer_matrices[particle][rxn] = \
                             process_transfer_matrix(line_num, file_lines)
+
+                    # parse fission matrices
                     else:
                         transfer_matrices[particle][rxn] = \
                             process_fission_matrix(line_num, file_lines)
@@ -602,6 +612,7 @@ def read_njoy_file(
                 # 515: Pair production, electron field
                 # 517: Pair production, nuclear field
                 # 516: Pair production; sum of MT=515, 517.
+
                 if mf == 23 and mt == 516:
                     cross_sections["(g,pair_production)"] = \
                         process_cross_section(line_num, file_lines)
@@ -629,6 +640,7 @@ def read_njoy_file(
                 # xs(g->k) the incoh heat value is not saved either,
                 # the total heat xs (mf23/mt525) is the sum of the heat from
                 # inch(mf23/mt504) + abst(mf23/mt522) + pp(mf23/mt516)
+
                 if mf == 26 and mt == 504:
                     transfer_matrices["gamma"]["(g,incoherent)"] = \
                         process_transfer_matrix(
@@ -638,6 +650,7 @@ def read_njoy_file(
                 # caveat:
                 #   the pp values from transfer(mf26) = 2x the pp
                 #   from the xsec(mf23)
+
                 if mf == 26 and mt == 516:
                     transfer_matrices["gamma"]["(g,pair_production)"] = \
                         process_transfer_matrix(line_num, file_lines)

@@ -19,7 +19,7 @@ def write_xs_file(data, full_path, problem_description):
         g_group = problem_description["G_g"]
 
         xsf.write(f"# Isotope: {problem_description['isotope']}\n")
-        xsf.write(f"# Problem type: {problem_description['problem_type']}\n")
+        xsf.write(f"# Problem type: {problem_description['type']}\n")
 
         if n_group > 0:
             xsf.write(f"# Neutron group structure: {n_group} groups\n")
