@@ -33,28 +33,28 @@ argparser = argparse.ArgumentParser(
 )
 
 argparser.add_argument(
-    "--output-directory",
+    '--output-directory',
     type=str,
     required=True,
     help="Complete path where to store the output.",
 )
 
 argparser.add_argument(
-    "--njoy-output-filename",
+    '--njoy-output-filename',
     type=str,
     required=True,
     help="Name of output file produced by NJOY."
 )
 
 argparser.add_argument(
-    "--xs-filename",
+    '--xs-filename',
     type=str,
     help="Name of XS file.",
 )
 
 argparser.add_argument(
-    "--plot",
-    action="store_true",
+    '--plot',
+    action='store_true',
     default=False,
     help="A flag for plotting the XS data."
 )
@@ -94,8 +94,8 @@ data, problem_description = combiner.build_combined_data(
 
 # TODO: this is not a good way of recovering the isotope if the user
 #       supplies its own output filename
-filename = argv.njoy_output_filename.split("_")
-problem_description["isotope"] = filename[0].split(".")[0]
+filename = argv.njoy_output_filename.split('_')
+problem_description['isotope'] = filename[0].split('.')[0]
 print(f"\nProblem Description:")
 for key, val in problem_description.items():
     print(f"{key:<15}: {val}")
@@ -131,7 +131,7 @@ if argv.plot:
     import os
     import glob
 
-    filename = xs_filename.split(".")
+    filename = xs_filename.split('.')
     for file in glob.glob("*.png"):
         plot_dir = os.path.join(output_directory, "figures")
         if not os.path.isdir(plot_dir):

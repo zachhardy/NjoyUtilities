@@ -450,14 +450,14 @@ def read_njoy_file(
     njoy_raw_data = {}
     group_structures = {}
     cross_sections = {}
-    transfer_matrices = {"neutron": {}, "gamma": {}}
+    transfer_matrices = {'neutron': {}, 'gamma': {}}
     weight_spectrum = {}
 
     # flag_run_processed             = False
     flag_gamma_structure_processed = False
 
     # Read the file
-    with open(njoy_filename, "r") as njoy_file:
+    with open(njoy_filename, 'r') as njoy_file:
 
         line_num = -1
         file_lines = njoy_file.readlines()
@@ -476,12 +476,12 @@ def read_njoy_file(
             # --------------------------------------------------
 
             if "sigma zeroes" in line:
-                group_structures["neutron"] = \
+                group_structures['neutron'] = \
                     process_group_structure(line_num, file_lines)
 
             if "gamma group structure......" in line:
                 if not flag_gamma_structure_processed:
-                    group_structures["gamma"] = \
+                    group_structures['gamma'] = \
                         process_group_structure(line_num, file_lines)
                     flag_gamma_structure_processed = True
 
@@ -515,7 +515,7 @@ def read_njoy_file(
                             process_cross_section(line_num, file_lines)
 
                         # this is to get the weighting spectrum
-                        weight_spectrum["neutron"] = process_cross_section(
+                        weight_spectrum['neutron'] = process_cross_section(
                             line_num, file_lines, wt_spectrum=True
                         )
 
@@ -596,17 +596,17 @@ def read_njoy_file(
 
                 # Total photon interaction
                 if mf == 23 and mt == 501:
-                    cross_sections["(g,total)"] = \
+                    cross_sections['(g,total)'] = \
                         process_cross_section(line_num, file_lines)
 
                 # Photon coherent scattering
                 if mf == 23 and mt == 502:
-                    cross_sections["(g,coherent)"] = \
+                    cross_sections['(g,coherent)'] = \
                         process_cross_section(line_num, file_lines)
 
                 # Photon incoherent scattering
                 if mf == 23 and mt == 504:
-                    cross_sections["(g,incoherent)"] = \
+                    cross_sections['(g,incoherent)'] = \
                         process_cross_section(line_num, file_lines)
 
                 # 515: Pair production, electron field
@@ -614,16 +614,16 @@ def read_njoy_file(
                 # 516: Pair production; sum of MT=515, 517.
 
                 if mf == 23 and mt == 516:
-                    cross_sections["(g,pair_production)"] = \
+                    cross_sections['(g,pair_production)'] = \
                         process_cross_section(line_num, file_lines)
 
                 # Photoelectric absorption
                 if mf == 23 and mt == 522:
-                    cross_sections["(g,abst)"] = \
+                    cross_sections['(g,abst)'] = \
                         process_cross_section(line_num, file_lines)
 
                 if mf == 23 and mt == 525:
-                    cross_sections["(g,heat)"] = \
+                    cross_sections['(g,heat)'] = \
                         process_cross_section(line_num, file_lines)
 
                 # --------------------------------------------------
@@ -631,7 +631,7 @@ def read_njoy_file(
                 # --------------------------------------------------
 
                 if mf == 26 and mt == 502:
-                    transfer_matrices["gamma"]["(g,coherent)"] = \
+                    transfer_matrices['gamma']['(g,coherent)'] = \
                         process_transfer_matrix(
                             line_num, file_lines, overflow=True
                         )
@@ -642,7 +642,7 @@ def read_njoy_file(
                 # inch(mf23/mt504) + abst(mf23/mt522) + pp(mf23/mt516)
 
                 if mf == 26 and mt == 504:
-                    transfer_matrices["gamma"]["(g,incoherent)"] = \
+                    transfer_matrices['gamma']['(g,incoherent)'] = \
                         process_transfer_matrix(
                             line_num, file_lines, overflow=True
                         )
@@ -652,21 +652,21 @@ def read_njoy_file(
                 #   from the xsec(mf23)
 
                 if mf == 26 and mt == 516:
-                    transfer_matrices["gamma"]["(g,pair_production)"] = \
+                    transfer_matrices['gamma']['(g,pair_production)'] = \
                         process_transfer_matrix(line_num, file_lines)
 
-    njoy_raw_data["group_structures"] = group_structures
-    njoy_raw_data["cross_sections"] = cross_sections
-    njoy_raw_data["transfer_matrices"] = transfer_matrices
+    njoy_raw_data['group_structures'] = group_structures
+    njoy_raw_data['cross_sections'] = cross_sections
+    njoy_raw_data['transfer_matrices'] = transfer_matrices
 
     if verbose:
         print("Cross-sections extracted:")
-        xss = njoy_raw_data["cross_sections"]
+        xss = njoy_raw_data['cross_sections']
         for k in xss:
             print(f"\t{k}")
 
         print("Transfer matrices extracted")
-        mats = njoy_raw_data["transfer_matrices"]
+        mats = njoy_raw_data['transfer_matrices']
         for ptype in mats:
             print(f"\t{ptype}")
             for k in mats[ptype]:

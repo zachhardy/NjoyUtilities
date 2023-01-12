@@ -19,19 +19,19 @@ def build_combined_data(
     # Get raw NJOY data
     # ------------------------------------------------------------
 
-    group_structures: dict = raw_njoy_data["group_structures"]
-    cross_sections: dict = raw_njoy_data["cross_sections"]
-    transfer_matrices: dict = raw_njoy_data["transfer_matrices"]
+    group_structures: dict = raw_njoy_data['group_structures']
+    cross_sections: dict = raw_njoy_data['cross_sections']
+    transfer_matrices: dict = raw_njoy_data['transfer_matrices']
 
     # ------------------------------------------------------------
     # Number of groups
     # ------------------------------------------------------------
 
     n_gs, g_gs = [], []
-    if "neutron" in group_structures:
-        n_gs = group_structures["neutron"]
-    if "gamma" in group_structures:
-        g_gs = group_structures["gamma"]
+    if 'neutron' in group_structures:
+        n_gs = group_structures['neutron']
+    if 'gamma' in group_structures:
+        g_gs = group_structures['gamma']
 
     G_n = len(n_gs)
     G_g = len(g_gs)
@@ -44,17 +44,17 @@ def build_combined_data(
     problem_description = {}
     if n_gs:
         if g_gs:
-            problem_description["type"] = "Neutron + Gamma"
+            problem_description['type'] = "Neutron + Gamma"
         elif not g_gs:
-            problem_description["type"] = "Neutron"
+            problem_description['type'] = "Neutron"
     elif g_gs:
-        problem_description["type"] = "Gamma"
+        problem_description['type'] = "Gamma"
     else:
-        problem_description["type"] = "Unknown"
+        problem_description['type'] = "Unknown"
         raise Exception("Unknown particle type")
 
-    problem_description["G_n"] = G_n
-    problem_description["G_g"] = G_g
+    problem_description['G_n'] = G_n
+    problem_description['G_g'] = G_g
 
     # ------------------------------------------------------------
     # Total cross-sections
@@ -63,13 +63,13 @@ def build_combined_data(
     sig_t = np.zeros(G)
 
     if "(n,total)" in cross_sections:
-        data = cross_sections["(n,total)"]
+        data = cross_sections['(n,total)']
         for entry in data:
             g, v = entry
             sig_t[G_n - g - 1] = v
 
     if "(g,total)" in cross_sections:
-        data = cross_sections["(g,total)"]
+        data = cross_sections['(g,total)']
         for entry in data:
             g, v = entry
             sig_t[G - g - 1] = v
@@ -81,13 +81,13 @@ def build_combined_data(
     sig_heat = np.zeros(G)
 
     if "(n,heat)" in cross_sections:
-        data = cross_sections["(n,heat)"]
+        data = cross_sections['(n,heat)']
         for entry in data:
             g, v = entry
             sig_heat[G_n - g - 1] = v
 
     if "(g,heat)" in cross_sections:
-        data = cross_sections["(g,heat)"]
+        data = cross_sections['(g,heat)']
         for entry in data:
             g, v = entry
             sig_heat[G - g - 1] = v
@@ -99,13 +99,13 @@ def build_combined_data(
     sig_x = np.zeros(G)
 
     if "(n,g)" in cross_sections:
-        data = cross_sections["(n,g)"]
+        data = cross_sections['(n,g)']
         for entry in data:
             g, v = entry
             sig_x[G_n - g - 1] = v
 
     if "(g,x)" in cross_sections:
-        data = cross_sections["(g,x)"]
+        data = cross_sections['(g,x)']
         for entry in data:
             g, v = entry
             sig_x[G - g - 1] = v
@@ -116,33 +116,33 @@ def build_combined_data(
 
     sig_el = np.zeros(G)
     if "(n,elastic)" in cross_sections:
-        data = cross_sections["(n,elastic)"]
+        data = cross_sections['(n,elastic)']
         for entry in data:
             g, v = entry
             sig_el[G_n - g - 1] = v
 
     sig_inel = np.zeros(G)
     if "(n,inel)" in cross_sections:
-        data = cross_sections["(n,inel)"]
+        data = cross_sections['(n,inel)']
         for entry in data:
             g, v = entry
             sig_inel[G_n - g - 1] = v
 
     sig_therm = np.zeros(G)
     if "free gas" in cross_sections:
-        data = cross_sections["free gas"]
+        data = cross_sections['free gas']
         for entry in data:
             g, v = entry
             sig_therm[G_n - g - 1] = v
 
     elif "inelastic s(a,b)" in cross_sections:
-        data = cross_sections["inelastic s(a,b)"]
+        data = cross_sections['inelastic s(a,b)']
         for entry in data:
             g, v = entry
             sig_therm[G_n - g - 1] = v
 
         if "elastic s(a,b)" in cross_sections:
-            data = cross_sections["inelastic s(a,b)"]
+            data = cross_sections['inelastic s(a,b)']
             for entry in data:
                 g, v = entry
                 sig_therm[G_n - g - 1] += v
@@ -158,28 +158,28 @@ def build_combined_data(
 
     sig_nonel = np.zeros(G)
     if "(g,nonel)" in cross_sections:
-        data = cross_sections["(g,nonel)"]
+        data = cross_sections['(g,nonel)']
         for entry in data:
             g, v = entry
             sig_nonel[G - g - 1] = v
 
     sig_coht = np.zeros(G)
     if "(g,coherent)" in cross_sections:
-        data = cross_sections["(g,coherent)"]
+        data = cross_sections['(g,coherent)']
         for entry in data:
             g, v = entry
             sig_coht[G - g - 1] = v
 
     sig_incoht = np.zeros(G)
     if "(g,incoherent)" in cross_sections:
-        data = cross_sections["(g,incoherent)"]
+        data = cross_sections['(g,incoherent)']
         for entry in data:
             g, v = entry
             sig_incoht[G - g - 1] = v
 
     sig_pairprod = np.zeros(G)
     if "(g,pair_production)" in cross_sections:
-        data = cross_sections["(g,pair_production)"]
+        data = cross_sections['(g,pair_production)']
         for entry in data:
             g = entry[0]
             v = entry[1]
@@ -191,16 +191,16 @@ def build_combined_data(
 
     inv_v = np.zeros(G)
     if "inverse velocity" in cross_sections:
-        data = cross_sections["inverse velocity"]
+        data = cross_sections['inverse velocity']
         for entry in data:
             g, v = entry
             inv_v[G_n - g - 1] = v
 
     e_avg = np.zeros(G)
-    for particle in ["neutron", "gamma"]:
+    for particle in ['neutron', 'gamma']:
         ref = G_n if particle == "neutron" else G
         if f"average energy ({particle})" in cross_sections:
-            data = cross_sections[f"average energy ({particle})"]
+            data = cross_sections[f'average energy ({particle})']
             for entry in data:
                 g, v = entry
                 e_avg[ref - g - 1] = v * 1.0e-6
@@ -208,7 +208,7 @@ def build_combined_data(
     # if gamma groups are used but average energies were not parsed
     # use the average of the photon group bounds
     if G_g > 0 and np.sum(e_avg[G_n:]) == 0.0:
-        e_bounds = group_structures["gamma"]
+        e_bounds = group_structures['gamma']
         for entry in e_bounds:
             g, elow, ehigh = entry
             e_avg[G - g - 1] = 0.5 * (elow + ehigh)
@@ -220,13 +220,13 @@ def build_combined_data(
     sig_f = np.zeros(G)
 
     if "(n,fission)" in cross_sections:
-        data = cross_sections["(n,fission)"]
+        data = cross_sections['(n,fission)']
         for entry in data:
             g, v = entry
             sig_f[G_n - g - 1] = v
 
     if "(g,fission)" in cross_sections:
-        data = cross_sections["(g,fission)"]
+        data = cross_sections['(g,fission)']
         for entry in data:
             g, v = entry
             sig_f[G - g - 1] = v
@@ -235,49 +235,49 @@ def build_combined_data(
     nu_prompt = np.zeros(G)
     nu_delayed = np.zeros(G)
 
-    chi_prompt = {"neutron": np.zeros(G_n),
-                  "gamma": np.zeros(G_n)}
+    chi_prompt = {'neutron': np.zeros(G_n),
+                  'gamma': np.zeros(G_n)}
 
-    decay_const = {"neutron": [], "gamma": []}
-    precursor_fraction = {"neutron": [], "gamma": []}
-    chi_delayed = {"neutron": [], "gamma": []}
+    decay_const = {'neutron': [], 'gamma': []}
+    precursor_fraction = {'neutron': [], 'gamma': []}
+    chi_delayed = {'neutron': [],'gamma': []}
 
-    for particle in ["neutron", "gamma"]:
+    for particle in ['neutron', 'gamma']:
         ref = G_n if particle == "neutron" else G
 
         if f"total nubar ({particle})" in cross_sections:
-            data = cross_sections[f"total nubar ({particle})"]
+            data = cross_sections[f'total nubar ({particle})']
             for entry in data:
                 g, v = entry
                 nu_total[ref - g - 1] = v
 
         if f"prompt nubar ({particle})" in cross_sections:
-            data = cross_sections[f"prompt nubar ({particle})"]
+            data = cross_sections[f'prompt nubar ({particle})']
             for entry in data:
                 g, v = entry
                 nu_prompt[ref - g - 1] = v
 
         if f"delayed nubar ({particle})" in cross_sections:
-            data = cross_sections[f"delayed nubar ({particle})"]
+            data = cross_sections[f'delayed nubar ({particle})']
             for entry in data:
                 g, v = entry
                 nu_delayed[ref - g - 1] = v
 
         if f"prompt chi ({particle})" in cross_sections:
-            data = cross_sections[f"prompt chi ({particle})"]
+            data = cross_sections[f'prompt chi ({particle})']
             for entry in data:
                 g, v = entry
                 chi_prompt[particle][G_n - g - 1] = v
             chi_prompt[particle] /= sum(chi_prompt[particle])
 
         if f"decay constants ({particle})" in cross_sections:
-            data = cross_sections[f"decay constants ({particle})"]
+            data = cross_sections[f'decay constants ({particle})']
             lambdas = np.array([entry[1] for entry in data])
             decay_const[particle] = lambdas
 
             # get chi delayed
             chi_delayed[particle] = np.zeros((G_n, len(lambdas)))
-            data = cross_sections[f"delayed chi ({particle})"]
+            data = cross_sections[f'delayed chi ({particle})']
             for entry in data:
                 g, v = entry[0], entry[1:]
                 chi_delayed[particle][G_n - g - 1] = v
@@ -315,16 +315,16 @@ def build_combined_data(
     # ------------------------------------------------------------
 
     thermal_rxns = []
-    for key in transfer_matrices["neutron"].keys():
-        if any(s in key for s in ["free gas", "s(a,b)"]):
+    for key in transfer_matrices['neutron'].keys():
+        if any(s in key for s in ['free gas", "s(a,b)']):
             thermal_rxns.append(key)
     if len(thermal_rxns) > 1 and "free gas" in thermal_rxns:
-        thermal_rxns.pop(thermal_rxns.index("free gas"))
-        transfer_matrices["neutron"].pop("free gas")
+        thermal_rxns.pop(thermal_rxns.index('free gas'))
+        transfer_matrices['neutron'].pop('free gas')
 
     n_therm = -1
     for rxn_type in thermal_rxns:
-        data = transfer_matrices["neutron"][rxn_type]
+        data = transfer_matrices['neutron'][rxn_type]
         if data:
             n_therm = max(n_therm, max(max(*row[:2]) for row in data))
 
@@ -377,7 +377,7 @@ def build_combined_data(
             if "fission" not in rxn_type:
 
                 # skip thermal reactions
-                skip = ["free_gas", "s(a,b)"]
+                skip = ['free_gas", "s(a,b)']
                 if any(s in rxn_type for s in skip):
                     continue
 
@@ -414,12 +414,12 @@ def build_combined_data(
     # it only contained the spectrum. When this is the case, the outer
     # product fission matrix is computed.
 
-    if "(g,fission)" in transfer_matrices["neutron"] and \
-            not transfer_matrices["neutron"]["(g,fission)"]:
+    if "(g,fission)" in transfer_matrices['neutron'] and \
+            not transfer_matrices['neutron']['(g,fission)']:
         for g in range(G_n):
             for gp in range(G_g):
                 fission_mats[0][G_n + gp][g] += \
-                    chi_prompt["gamma"][g] * \
+                    chi_prompt['gamma'][g] * \
                     nu_prompt[G_n + gp] * sig_f[G_n + gp]
 
     # ------------------------------------------------------------
@@ -429,14 +429,14 @@ def build_combined_data(
     if thermal_rxns and n_therm >= -1:
 
         # shorthand for neutron-neutron transfers
-        nn_transfers = transfer_matrices["neutron"]
+        nn_transfers = transfer_matrices['neutron']
 
         # start and end of the thermal groups
         bgn, end = G_n - n_therm, G_n + 1
 
         # subtract thermal MT2 from the transfer matrix
         elastic = np.zeros((M, G, G))
-        add_transfer_neutron(nn_transfers["(n,elastic)"], elastic)
+        add_transfer_neutron(nn_transfers['(n,elastic)'], elastic)
         elastic = elastic[:, bgn:end, bgn:end]
         scattering_mats[:, bgn:end, bgn:end] -= elastic
 
@@ -642,19 +642,19 @@ def build_combined_data(
                     iax.set_ylabel("$\chi$ (MeV$^{-1}$)" if i == 0 else
                                    "Neutrons Per Fission")
 
-                ax[0].semilogx(e_avg[:G_n], chi_prompt["neutron"])
+                ax[0].semilogx(e_avg[:G_n], chi_prompt['neutron'])
                 ax[0].grid(True)
 
-                line0, = ax[1].semilogx(e_avg[:G_n], nu_total[:G_n], "b")
-                line1, = ax[1].semilogx(e_avg[:G_n], nu_prompt[:G_n], "r")
+                line0, = ax[1].semilogx(e_avg[:G_n], nu_total[:G_n], 'b')
+                line1, = ax[1].semilogx(e_avg[:G_n], nu_prompt[:G_n], 'r')
 
                 twin_ax = ax[1].twinx()
-                line2, = twin_ax.semilogx(e_avg[:G_n], nu_delayed[:G_n], "g")
+                line2, = twin_ax.semilogx(e_avg[:G_n], nu_delayed[:G_n], 'g')
                 twin_ax.set_ylabel("Delayed Neutrons Per Fission")
 
                 lines = [line0, line1, line2]
-                labels = ["Total", "Prompt", "Delayed"]
-                ax[1].legend(lines, labels, loc="center left")
+                labels = ['Total', 'Prompt', 'Delayed']
+                ax[1].legend(lines, labels, loc='center left')
                 ax[1].grid(True)
 
                 plt.tight_layout()
@@ -687,18 +687,18 @@ def build_combined_data(
                     iax.set_ylabel("$\chi$ (MeV$^{-1}$)" if i == 0 else
                                    r"Neutrons Per Fission")
 
-                ax[0].semilogx(e_avg[:G_n], chi_prompt["gamma"])
+                ax[0].semilogx(e_avg[:G_n], chi_prompt['gamma'])
                 ax[0].grid(True)
 
-                line0, = ax[1].semilogx(e_avg[G_n:], nu_total[G_n:], "b")
-                line1, = ax[1].semilogx(e_avg[G_n:], nu_prompt[G_n:], "r")
+                line0, = ax[1].semilogx(e_avg[G_n:], nu_total[G_n:], 'b')
+                line1, = ax[1].semilogx(e_avg[G_n:], nu_prompt[G_n:], 'r')
 
                 twin_ax = ax[1].twinx()
-                line2, = twin_ax.semilogx(e_avg[G_n:], nu_delayed[G_n:], "g")
+                line2, = twin_ax.semilogx(e_avg[G_n:], nu_delayed[G_n:], 'g')
                 twin_ax.set_ylabel("Delayed Neutrons Per Fission")
 
                 lines = [line0, line1, line2]
-                labels = ["Total", "Prompt", "Delayed"]
+                labels = ['Total', 'Prompt', 'Delayed']
                 ax[1].legend(lines, labels)
                 ax[1].grid(True)
 
@@ -711,28 +711,28 @@ def build_combined_data(
     # Build return data
     # ------------------------------------------------------------
 
-    return_data = {"neutron_gs": n_gs,
-                   "gamma_gs": g_gs,
-                   "sigma_t": sig_t,
-                   "sigma_a": sig_a,
-                   "sigma_s": sig_s,
-                   "sigma_s_el": sig_el,
-                   "sigma_s_inel": sig_inel,
-                   "sigma_s_thermal": sig_therm,
-                   "sigma_f": sig_f,
-                   "sigma_heat": sig_heat,
-                   "nu_total": nu_total,
-                   "nu_prompt": nu_prompt,
-                   "nu_delayed": nu_delayed,
-                   "chi_prompt": chi_prompt,
-                   "chi_delayed": chi_delayed,
-                   "decay_constants": decay_const,
-                   "precursor_fraction": precursor_fraction,
-                   "inv_velocity": inv_v,
-                   "avg_energy": e_avg,
-                   "scattering_matrices": scattering_mats,
-                   "scattering_matrices_sparsity": scattering_sparsity,
-                   "fission_matrices": fission_mats,
-                   "fission_matrices_sparsity": fission_sparsity}
+    return_data = {'neutron_gs': n_gs,
+                   'gamma_gs': g_gs,
+                   'sigma_t': sig_t,
+                   'sigma_a': sig_a,
+                   'sigma_s': sig_s,
+                   'sigma_s_el': sig_el,
+                   'sigma_s_inel': sig_inel,
+                   'sigma_s_thermal': sig_therm,
+                   'sigma_f': sig_f,
+                   'sigma_heat': sig_heat,
+                   'nu_total': nu_total,
+                   'nu_prompt': nu_prompt,
+                   'nu_delayed': nu_delayed,
+                   'chi_prompt': chi_prompt,
+                   'chi_delayed': chi_delayed,
+                   'decay_constants': decay_const,
+                   'precursor_fraction': precursor_fraction,
+                   'inv_velocity': inv_v,
+                   'avg_energy': e_avg,
+                   'scattering_matrices': scattering_mats,
+                   'scattering_matrices_sparsity': scattering_sparsity,
+                   'fission_matrices': fission_mats,
+                   'fission_matrices_sparsity': fission_sparsity}
 
     return return_data, problem_description

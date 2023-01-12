@@ -67,7 +67,8 @@ argparser = argparse.ArgumentParser(
     description="Prepares input/output files "
                 "for NJOY2016 and executes NJOY2016",
     formatter_class=CustomFormatter,
-    epilog='''Additional information:
+    epilog=textwrap.dedent('''\
+Additional information:
   Neutron group structure options (ign):
    1   arbitrary structure (read in)
    2   csewg 239-group structure
@@ -151,42 +152,42 @@ Example Custom group structure file:
 
 Example Custom smooth weight function:
 See spectrum_file.txt
-   
 ''')
+)
 
 argparser.add_argument(
-    "--njoy-executable",
+    '--njoy-executable',
     type=str,
-    default="njoy21",
+    default='njoy21',
     help="The NJOY executable"
 )
 
 argparser.add_argument(
-    "--path-to-neutron-endf",
+    '--path-to-neutron-endf',
     type=str,
     help="Path to an incident neutron ENDF file."
 )
 
 argparser.add_argument(
-    "--path-to-gamma-endf",
+    '--path-to-gamma-endf',
     type=str,
     help="Path the incident gamma ENDF file."
 )
 
 argparser.add_argument(
-    "--path-to-photoat-endf",
+    '--path-to-photoat-endf',
     type=str,
     help="Path to photo-atomic ENDF file."
 )
 
 argparser.add_argument(
-    "--path-to-sab-endf",
+    '--path-to-sab-endf',
     type=str,
     help="Path to S(alpha, beta) scattering ENDF file."
 )
 
 argparser.add_argument(
-    "--neutron-group-structure",
+    '--neutron-group-structure',
     type=int,
     default=3,
     choices=[*range(1, 35)],
@@ -197,7 +198,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--custom-neutron-gs-file",
+    '--custom-neutron-gs-file',
     type=str,
     help=textwrap.dedent('''\
     The path to the custom neutron group structure file.
@@ -205,7 +206,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--neutron-weight-function",
+    '--neutron-weight-function',
     type=int,
     default=6,
     choices=[*range(1, 13)],
@@ -216,7 +217,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--custom-neutron-wt-file",
+    '--custom-neutron-wt-file',
     type=str,
     help=textwrap.dedent('''\
     The path to the custom neutron weight function file.
@@ -224,7 +225,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--gamma-group-structure",
+    '--gamma-group-structure',
     type=int,
     default=0,
     choices=[*range(0, 11)],
@@ -235,7 +236,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--custom-gamma-gs-file",
+    '--custom-gamma-gs-file',
     type=str,
     help=textwrap.dedent('''\
     The path to the custom gamma group structure file.
@@ -243,7 +244,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--gamma-weight-function",
+    '--gamma-weight-function',
     type=int,
     default=3,
     choices=[*range(1, 4)],
@@ -254,7 +255,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--custom-gamma-wt-file",
+    '--custom-gamma-wt-file',
     type=str,
     help=textwrap.dedent('''\
     The path to the custom gamma weight function file.
@@ -262,47 +263,47 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--temperature",
+    '--temperature',
     type=float,
     default=296.0,
     help="The material temperature."
 )
 
 argparser.add_argument(
-    "--inelastic-thermal-number",
+    '--inelastic-thermal-number',
     type=int,
     help="MT number to use for incoherent inelastic scattering"
 )
 
 argparser.add_argument(
-    "--elastic-thermal-number",
+    '--elastic-thermal-number',
     type=int,
     help="MT number to use for coherent/incoherent elastic scattering"
 )
 
 argparser.add_argument(
-    "--inelastic-thermal-num-atoms",
+    '--inelastic-thermal-num-atoms',
     type=int,
     default=1,
     help="MT number to use for incoherent inelastic scattering",
 )
 
 argparser.add_argument(
-    "--no-thermal",
-    action="store_true",
+    '--no-thermal',
+    action='store_true',
     default=False,
     help="A flag for excluding any thermal scattering."
 )
 
 argparser.add_argument(
-    "--fissile",
-    action="store_true",
+    '--fissile',
+    action='store_true',
     default=False,
     help="A flag for fissile materials."
 )
 
 argparser.add_argument(
-    "--output-directory",
+    '--output-directory',
     type=str,
     default=os.getcwd(),
     help=textwrap.dedent('''\
@@ -311,7 +312,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    "--output-filename",
+    '--output-filename',
     type=str,
     help=textwrap.dedent('''\
     A filename to save the output to.
@@ -506,7 +507,7 @@ sab_material_name = None
 # ----------------------------------------
 
 if argv.path_to_neutron_endf:
-    with open("tape20", "r") as endf:
+    with open("tape20", 'r') as endf:
         for _ in range(5):
             endf.readline()
 
@@ -526,7 +527,7 @@ if argv.path_to_neutron_endf:
 # ----------------------------------------
 
 if argv.path_to_gamma_endf:
-    with open("tape60", "r") as endf:
+    with open("tape60", 'r') as endf:
         for _ in range(5):
             endf.readline()
 
@@ -584,7 +585,7 @@ if not output_filename:
 # ------------------------------------------------------------
 
 with open("NJOY_INPUT.txt", 'w') as njoy_input:
-    njoy_input.write("-- Processing ENDF to PENDF\n")
+    njoy_input.write("-- NJOY Input File\n")
 
     # ------------------------------------------------------------ MODER
 

@@ -15,8 +15,8 @@ def write_xs_file(data, full_path, problem_description):
 
         xsf.write("#========== Problem Description ==========" + "\n")
 
-        n_group = problem_description["G_n"]
-        g_group = problem_description["G_g"]
+        n_group = problem_description['G_n']
+        g_group = problem_description['G_g']
 
         xsf.write(f"# Isotope: {problem_description['isotope']}\n")
         xsf.write(f"# Problem type: {problem_description['type']}\n")
@@ -31,29 +31,29 @@ def write_xs_file(data, full_path, problem_description):
         # Get data
         # --------------------------------------------------
 
-        sig_t = data["sigma_t"]
-        sig_a = data["sigma_a"]
-        sig_s = data["sigma_s"]
-        sig_f = data["sigma_f"]
-        sig_heat = data["sigma_heat"]
-        nu_total = data["nu_total"]
-        nu_prompt = data["nu_prompt"]
-        nu_delayed = data["nu_delayed"]
-        chi_prompt = data["chi_prompt"]
-        chi_delayed = data["chi_delayed"]
-        decay_const = data["decay_constants"]
-        precursor_fraction = data["precursor_fraction"]
-        inv_velocity = data["inv_velocity"]
-        E_avg = data["avg_energy"]
+        sig_t = data['sigma_t']
+        sig_a = data['sigma_a']
+        sig_s = data['sigma_s']
+        sig_f = data['sigma_f']
+        sig_heat = data['sigma_heat']
+        nu_total = data['nu_total']
+        nu_prompt = data['nu_prompt']
+        nu_delayed = data['nu_delayed']
+        chi_prompt = data['chi_prompt']
+        chi_delayed = data['chi_delayed']
+        decay_const = data['decay_constants']
+        precursor_fraction = data['precursor_fraction']
+        inv_velocity = data['inv_velocity']
+        E_avg = data['avg_energy']
 
-        scattering_mats = data["scattering_matrices"]
-        scattering_mats_nonzeros = data["scattering_matrices_sparsity"]
+        scattering_mats = data['scattering_matrices']
+        scattering_mats_nonzeros = data['scattering_matrices_sparsity']
 
-        fission_mats = data["fission_matrices"]
-        fission_mats_nonzeros = data["fission_matrices_sparsity"]
+        fission_mats = data['fission_matrices']
+        fission_mats_nonzeros = data['fission_matrices_sparsity']
 
-        neutron_gs = data["neutron_gs"]
-        gamma_gs = data["gamma_gs"]
+        neutron_gs = data['neutron_gs']
+        gamma_gs = data['gamma_gs']
 
         # ------------------------------------------------------------
         # Write general info
