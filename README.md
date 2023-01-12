@@ -103,7 +103,7 @@ format as those found in ```examples```.
 The aim of the script is to provide a streamlined input for generating cross-sections
 for a number of materials, group structures, and temperatures.
 The available input options are ```--materials```, ```--group_structures```, 
-```--temperatures```, ```--no_thermal```, ```--option```, and ```--plot```.
+```--temperatures```, ```--no-thermal```, ```--option```, and ```--plot```.
 
 The ```--materials``` are specified as a space separated list where each material
 has the form ```<zzz>-<symbol>-<aaa>-<molecule>```, where ```<molecule>``` should 
@@ -131,7 +131,7 @@ group structure specifications.
 The ```--temperatures``` are specified as a space separated list of floats.
 This argument defaults to room temperature.
 
-The ```--no_thermal``` input is used to turn off thermal treatment for particular
+The ```--no-thermal``` input is used to turn off thermal treatment for particular
 materials that were specified.
 This input takes the form of a list of integers where each integer corresponds to the
 index of a material in the ```--materials``` list.
@@ -186,20 +186,20 @@ output_file_prefix="U235"
 #================================= Run NJOY
 
 python njoy_runner.py \
---path_to_neutron_endf=$ENDF_ROOT/neutrons/$neutron_file \
+--path-to-neutron-endf=$ENDF_ROOT/neutrons/$neutron_file \
 --temperature=293.6 \
---neutron_group_structure=22 \
---output_directory=../$output_directory \
---output_filename=$output_file_prefix.njoy
+--neutron-group-structure=22 \
+--output-directory=../$output_directory \
+--output-filename=$output_file_prefix.njoy
 
 cd "$CWD" || exit
 
 echo "********** DONE with GENERATION"
 
 python3 njoy_processor.py \
---output_directory=$output_directory \
---njoy_output_filename=$output_file_prefix.njoy \
---xs_filename=$output_file_prefix.xs \
+--output-directory=$output_directory \
+--njoy-output-filename=$output_file_prefix.njoy \
+--xs-filename=$output_file_prefix.xs \
 --plot
 
 echo "********** DONE with PROCESSING"
@@ -236,24 +236,24 @@ in the ```njoy_utilities``` directory.
 The `njoy_runner.py` script basically runs NJOY and has the following 
 inputs (most of which are optional):
 ```
-# --path_to_neutron_endf=$ENDF_ROOT/neutrons/$neutron_file \
-# --path_to_gamma_endf=$ENDF_ROOT/gammas/$gamma_file \
-# --path_to_photoat_endf=$ENDF_ROOT/photoat/$photoat_file \
-# --path_to_sab_endf=$ENDF_ROOT/thermal_scatt/$sab_file \
-# --neutron_group_structure=22 \
-# --custom_neutron_gs_file="" \
-# --neutron_weight_function=8 \
-# --custom_neutron_wt_file="" \
-# --gamma_group_structure=0 \
-# --custom_gamma_gs_file="" \
-# --gamma_weight_function=2 \
-# --custom_gamma_wt_file="" \
+# --path-to-neutron-endf=$ENDF_ROOT/neutrons/$neutron_file \
+# --path-to-gamma-endf=$ENDF_ROOT/gammas/$gamma_file \
+# --path-to-photoat-endf=$ENDF_ROOT/photoat/$photoat_file \
+# --path-to-sab-endf=$ENDF_ROOT/thermal_scatt/$sab_file \
+# --neutron-group-structure=22 \
+# --custom-neutron-gs-file="" \
+# --neutron-weight-function=8 \
+# --custom-neutron-wt-file="" \
+# --gamma-group-structure=0 \
+# --custom-gamma-gs-file="" \
+# --gamma-weight-function=2 \
+# --custom-gamma-wt-file="" \
 # --temperature=296.0 \
-# --inelastic_thermal_number=229 \
-# --inelastic_thermal_num_atoms=1 \
-# --elastic_thermal_number=230 \
-# --output_directory=$output_directory \
-# --output_filename=../$output_file_prefix.njoy \
+# --inelastic-thermal-number=229 \
+# --inelastic-thermal-num-atoms=1 \
+# --elastic-thermal-number=230 \
+# --output-directory=$output_directory \
+# --output-filename=../$output_file_prefix.njoy \
 
 ```
 
@@ -261,17 +261,17 @@ The `njoy_processor.py` script converts NJOY output to the desired multi-group
 tranport cross-section format. 
 It only has three required inputs:
 ```
-#--output_directory=$output_directory \
-#--njoy_output_filename=$output_file_prefix.njoy \
-#--xs_filename=$output_file_prefix.xs
+#--output-directory=$output_directory \
+#--njoy-output-filename=$output_file_prefix.njoy \
+#--xs-filename=$output_file_prefix.xs
 ```
 Optionally a ```--plot``` flag can be used to visualize the data.
 
 ### FAQ-2: How to specify S(a,b) thermal scattering
 
-Simply run `njoy_runner.py` with `--path_to_sab_endf`, 
-`--inelastic_thermal_number=`, `--inelastic_thermal_num_atoms`, 
-and `--elastic_thermal_number` specified.
+Simply run `njoy_runner.py` with `--path-to-sab-endf`, 
+`--inelastic-thermal-number=`, `--inelastic-thermal-num-atoms`, 
+and `--elastic-thermal-number` specified.
 The latter is only required for some molecules.
 
 There aren't a lot of materials that have S(a,b) elastic treatment, 
@@ -279,9 +279,9 @@ so it is worth doing some homework on them and verifying a semi-infinite
 medium spectrum like done in the `tests` folder.
 
 ### FAQ-3: How to produce neutron-gamma cross-sections?
-The moment you supply the option `--path_to_gamma_endf` or 
-`--path_to_photoat_endf`, then the script will know to run with gamma 
-production and make `--gamma_group_structure` required.
+The moment you supply the option `--path-to-gamma-endf` or 
+`--path-to-photoat-endf`, then the script will know to run with gamma 
+production and make `--gamma-group-structure` required.
 
 ### FAQ-4: Format of a custom weighting spectrum file
 The file is in ENDF TAB1-record format which can be confusing. 

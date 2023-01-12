@@ -155,154 +155,154 @@ See spectrum_file.txt
 ''')
 
 argparser.add_argument(
-    '--njoy_executable',
+    "--njoy-executable",
     type=str,
-    default='njoy21',
+    default="njoy21",
     help="The NJOY executable"
 )
 
 argparser.add_argument(
-    '--path_to_neutron_endf',
+    "--path-to-neutron-endf",
     type=str,
     help="Path to an incident neutron ENDF file."
 )
 
 argparser.add_argument(
-    '--path_to_gamma_endf',
+    "--path-to-gamma-endf",
     type=str,
     help="Path the incident gamma ENDF file."
 )
 
 argparser.add_argument(
-    '--path_to_photoat_endf',
+    "--path-to-photoat-endf",
     type=str,
     help="Path to photo-atomic ENDF file."
 )
 
 argparser.add_argument(
-    '--path_to_sab_endf',
+    "--path-to-sab-endf",
     type=str,
     help="Path to S(alpha, beta) scattering ENDF file."
 )
 
 argparser.add_argument(
-    '--neutron_group_structure',
+    "--neutron-group-structure",
     type=int,
     default=3,
     choices=[*range(1, 35)],
     help=textwrap.dedent('''\
     The neutron group structure.
-    If 1, --custom_neutron_gs_file is required.
+    If 1, --custom-neutron-gs-file is required.
     Default 3, LANL 30-group structure.''')
 )
 
 argparser.add_argument(
-    '--custom_neutron_gs_file',
+    "--custom-neutron-gs-file",
     type=str,
     help=textwrap.dedent('''\
     The path to the custom neutron group structure file.
-    If --neutron_group_structure is not 1, this is ignored.'''),
+    If --neutron-group-structure is not 1, this is ignored.'''),
 )
 
 argparser.add_argument(
-    '--neutron_weight_function',
+    "--neutron-weight-function",
     type=int,
     default=6,
     choices=[*range(1, 13)],
     help=textwrap.dedent('''\
     The neutron weight function.
-    If 1, --custom_neutron_wt_file is required.
+    If 1, --custom-neutron-wt-file is required.
     Default 8, thermal--1/e--fast reactor--fission + fusion.''')
 )
 
 argparser.add_argument(
-    '--custom_neutron_wt_file',
+    "--custom-neutron-wt-file",
     type=str,
     help=textwrap.dedent('''\
     The path to the custom neutron weight function file.
-    If --neutron_weight_function is not 1, this is ignored.'''),
+    If --neutron-weight-function is not 1, this is ignored.'''),
 )
 
 argparser.add_argument(
-    '--gamma_group_structure',
+    "--gamma-group-structure",
     type=int,
     default=0,
     choices=[*range(0, 11)],
     help=textwrap.dedent('''\
     The gamma group structure.
-    If 1, --custom_gamma_gs_file is required.
+    If 1, --custom-gamma-gs-file is required.
     Default 0, no gamma group structure.''')
 )
 
 argparser.add_argument(
-    '--custom_gamma_gs_file',
+    "--custom-gamma-gs-file",
     type=str,
     help=textwrap.dedent('''\
     The path to the custom gamma group structure file.
-    If --gamma_group_structure is not 1, this is ignored.'''),
+    If --gamma-group-structure is not 1, this is ignored.'''),
 )
 
 argparser.add_argument(
-    '--gamma_weight_function',
+    "--gamma-weight-function",
     type=int,
     default=3,
     choices=[*range(1, 4)],
     help=textwrap.dedent('''\
     The gamma weight function.
-    If 1, --custom_gamma_wt_file is required.
+    If 1, --custom-gamma-wt-file is required.
     Default 3, 1/e + rolloffs.''')
 )
 
 argparser.add_argument(
-    '--custom_gamma_wt_file',
+    "--custom-gamma-wt-file",
     type=str,
     help=textwrap.dedent('''\
     The path to the custom gamma weight function file.
-    If --gamma_weight_function is not 1, this is ignored.'''),
+    If --gamma-weight-function is not 1, this is ignored.'''),
 )
 
 argparser.add_argument(
-    '--temperature',
+    "--temperature",
     type=float,
     default=296.0,
     help="The material temperature."
 )
 
 argparser.add_argument(
-    '--inelastic_thermal_number',
+    "--inelastic-thermal-number",
     type=int,
     help="MT number to use for incoherent inelastic scattering"
 )
 
 argparser.add_argument(
-    '--elastic_thermal_number',
+    "--elastic-thermal-number",
     type=int,
     help="MT number to use for coherent/incoherent elastic scattering"
 )
 
 argparser.add_argument(
-    '--inelastic_thermal_num_atoms',
+    "--inelastic-thermal-num-atoms",
     type=int,
     default=1,
     help="MT number to use for incoherent inelastic scattering",
 )
 
 argparser.add_argument(
-    '--no_thermal',
+    "--no-thermal",
     action="store_true",
     default=False,
     help="A flag for excluding any thermal scattering."
 )
 
 argparser.add_argument(
-    '--fissile',
+    "--fissile",
     action="store_true",
     default=False,
     help="A flag for fissile materials."
 )
 
 argparser.add_argument(
-    '--output_directory',
+    "--output-directory",
     type=str,
     default=os.getcwd(),
     help=textwrap.dedent('''\
@@ -311,7 +311,7 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
-    '--output_filename',
+    "--output-filename",
     type=str,
     help=textwrap.dedent('''\
     A filename to save the output to.
@@ -327,21 +327,21 @@ argv = argparser.parse_args()
 if argv.path_to_neutron_endf:
     if not os.path.isfile(argv.path_to_neutron_endf):
         raise FileNotFoundError(
-            f"Value supplied to --path_to_neutron_endf does not "
+            f"Value supplied to --path-to-neutron-endf does not "
             f"point to an existing file."
         )
 
 if argv.path_to_gamma_endf:
     if not os.path.isfile(argv.path_to_gamma_endf):
         raise FileNotFoundError(
-            "Value supplied to --path_to_gamma_endf does not point "
+            "Value supplied to --path-to-gamma-endf does not point "
             "to an existing file."
         )
 
 if argv.path_to_photoat_endf:
     if not os.path.isfile(argv.path_to_photoat_endf):
         raise FileNotFoundError(
-            "Value supplied to --path_to_photoat_endf does not point "
+            "Value supplied to --path-to-photoat-endf does not point "
             "to an existing file."
         )
 
@@ -349,31 +349,31 @@ if argv.path_to_sab_endf:
     if not os.path.isfile(argv.path_to_sab_endf):
         print(argv.path_to_sab_endf)
         raise FileNotFoundError(
-            "Value supplied to --path_to_sab_endf does not point to "
+            "Value supplied to --path-to-sab-endf does not point to "
             "an existing file."
         )
 
 if argv.neutron_group_structure == 1:
     if not argv.custom_neutron_gs_file:
         raise ValueError(
-            "When supplying 1 for --neutron_group_structure, "
-            "then --custom_neutron_gs_file must be supplied."
+            "When supplying 1 for --neutron-group-structure, "
+            "then --custom-neutron-gs-file must be supplied."
         )
     elif not os.path.isfile(argv.custom_neutron_gs_file):
         raise FileNotFoundError(
-            "Value supplied to --custom_neutron_gs_file does not "
+            "Value supplied to --custom-neutron-gs-file does not "
             "point to an existing file."
         )
 
 if argv.neutron_weight_function == 1:
     if not argv.custom_neutron_wt_file:
         raise ValueError(
-            "When supplying 1 for --neutron_weight_function, "
-            "then --custom_neutron_wt_file must be supplied."
+            "When supplying 1 for --neutron-weight-function, "
+            "then --custom-neutron-wt-file must be supplied."
         )
     elif not os.path.isfile(argv.custom_neutron_wt_file):
         raise FileNotFoundError(
-            "Value supplied to --custom_neutron_wt_file does not "
+            "Value supplied to --custom-neutron-wt-file does not "
             "point to an existing file."
         )
 
@@ -381,39 +381,39 @@ if argv.path_to_gamma_endf or argv.path_to_photoat_endf:
     if argv.gamma_group_structure == 1:
         if not argv.custom_gamma_gs_file:
             raise ValueError(
-                "When supplying 1 for --gamma_group_structure, "
-                "then --custom_gamma_gs_file must be supplied."
+                "When supplying 1 for --gamma-group-structure, "
+                "then --custom-gamma-gs-file must be supplied."
             )
         elif not os.path.isfile(argv.custom_gamma_gs_file):
             raise FileNotFoundError(
-                "Value supplied to --custom_gamma_gs_file does not "
+                "Value supplied to --custom-gamma-gs-file does not "
                 "point to an existing file."
             )
 
     if argv.gamma_weight_function == 1:
         if not argv.custom_gamma_wt_file:
             raise ValueError(
-                "When supplying 1 for --gamma_weight_function, "
-                "then --custom_gamma_wt_file must be supplied."
+                "When supplying 1 for --gamma-weight-function, "
+                "then --custom-gamma-wt-file must be supplied."
             )
         elif not os.path.isfile(argv.custom_gamma_wt_file):
             raise FileNotFoundError(
-                "Value supplied to --custom_gamma_wt_file does not "
+                "Value supplied to --custom-gamma-wt-file does not "
                 "point to an existing file."
             )
 
 if argv.path_to_sab_endf:
     if not argv.inelastic_thermal_number:
         raise ValueError(
-            "When --path_to_sab_endf is supplied, "
-            "--inelastic_thermal_number must also be supplied."
+            "When --path-to-sab-endf is supplied, "
+            "--inelastic-thermal-number must also be supplied."
         )
 
 output_directory = os.path.abspath(argv.output_directory)
 output_directory = os.path.join(output_directory, "njoy")
 if not os.path.isdir(output_directory):
     warnings.warn(
-        "Value supplied to --output_directory does not point to an "
+        "Value supplied to --output-directory does not point to an "
         f"existing directory. Creating one at {output_directory}..."
     )
     os.makedirs(output_directory)
@@ -434,24 +434,23 @@ with_thermal = not argv.no_thermal
 # neutron sab endf     50
 # gamma endf           60
 # photoat endf         70
-# moder neutron  input 20    output 21
-# moder gamma    input 60    output 61
-# moder photoat  input 70    output 71
-# reconr neutron input 21    output 22
-# reconr gamma   input 61    output 62
-# reconr photoat input 71    output 72
-# broadr neutron input 21,22 output 23
-# broadr gamma   input 61 62 output 63
-# unresr         input 21,23 output 24
-# heatr          input 21,24 output 25
-# thermr freeg   input 25    output 26
-# thermr sab     input 50,26 output 27
-# groupr neutron input 21,27 output 28
-# groupr gamma   input 61,63 output 64
-# gaminr         input 71,72 output 73
-# moder print    input 28    output 29
-# moder print    input 64    output 65
-# moder print    input 73    output 74
+# moder neutron  input 20       output 21
+# moder gamma    input 60       output 61
+# moder photoat  input 70       output 71
+# reconr neutron input 21       output 22
+# reconr gamma   input 61       output 62
+# reconr photoat input 71       output 72
+# broadr neutron input 21,22    output 23
+# broadr gamma   input 61 62    output 63
+# unresr         input 21,23    output 24
+# heatr          input 21,24    output 25
+# thermr freeg   input 25       output 26
+# thermr sab     input 50,26    output 27
+# groupr neutron input 21,27    output 28
+# groupr gamma   input 61,63    output 64
+# gaminr         input 71,72    output 73
+# matxsr         input 28,64,73 output 99
+
 
 # ------------------------------------------------------------
 # Display problem type
@@ -591,9 +590,11 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
 
     njoy_input.write("moder\n")
     njoy_input.write("20 -21/\n")
+
     if with_gamma:
         njoy_input.write("moder\n")
         njoy_input.write("60 -61/\n")
+
     if with_photoat:
         njoy_input.write("moder\n")
         njoy_input.write("70 -71\n")
@@ -603,8 +604,8 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
     njoy_input.write("reconr\n")
     njoy_input.write("-21 -22/\n")
     njoy_input.write("'pendf neutron tape'/\n")
-    njoy_input.write(f"{neutron_material_number} 0/\n")
-    njoy_input.write("0.001/\n")
+    njoy_input.write(f"{neutron_material_number}/\n")
+    njoy_input.write("0.001/\n")  # tolerance
     njoy_input.write("0/\n")
 
     if with_gamma:
@@ -612,7 +613,7 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
         njoy_input.write("-61 -62/\n")
         njoy_input.write("'pendf gamma tape'/\n")
         njoy_input.write(f"{gamma_material_number} 0/\n")
-        njoy_input.write("0.001/\n")
+        njoy_input.write("0.001/\n")  # tolerance
         njoy_input.write("0/\n")
 
     if with_photoat:
@@ -628,7 +629,7 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
     njoy_input.write("broadr\n")
     njoy_input.write("-21 -22 -23/\n")
     njoy_input.write(f"{neutron_material_number} 1 0 0 0/\n")
-    njoy_input.write("0.001/\n")
+    njoy_input.write("0.001/\n")  # tolerance
     njoy_input.write(f"{argv.temperature}/\n")
     njoy_input.write("0/\n")
 
@@ -636,7 +637,7 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
         njoy_input.write("broadr\n")
         njoy_input.write("-61 -62 -63/\n")
         njoy_input.write(f"{gamma_material_number} 1 0 0 0/\n")
-        njoy_input.write("0.001/\n")
+        njoy_input.write("0.001/\n")  # tolerance
         njoy_input.write(f"{argv.temperature}/\n")
         njoy_input.write("0/\n")
 
@@ -666,16 +667,14 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
         njoy_input.write(f"{neutron_material_number} ")
         njoy_input.write("16 ")  # number of angle bins
         njoy_input.write("1 ")  # number of temperatures
-        # inelastic option -- 0=none, 1=free-gas, 2=s(a,b)
-        njoy_input.write("1 ")
-        # elastic option -- 0=none, 1=ENDF6 format
-        njoy_input.write("0 ")
+        njoy_input.write("1 ")  # inelastic option -- 1=free-gas
+        njoy_input.write("0 ")  # elastic option -- 0=none
         njoy_input.write("0 ")  # output format
         njoy_input.write("1 ")  # number of principal atoms
         njoy_input.write("221 ")  # MT for inelastic reactions
-        njoy_input.write("1/\n")  # print option -- 0=min, 1=max
+        njoy_input.write("1/\n")  # print option -- 1=max
 
-        njoy_input.write(f"{argv.temperature}/\n")  # temperatures
+        njoy_input.write(f"{argv.temperature}/\n")
 
         njoy_input.write("0.005 ")  # tolerance
         njoy_input.write("5.0/\n")  # max energy for thermal
@@ -688,17 +687,15 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
             njoy_input.write(f"{sab_material_number} ")
             njoy_input.write(f"{neutron_material_number} ")
             njoy_input.write("16 ")  # number of angle bins
-            njoy_input.write("1 ")  # number of temperaturs
-            # inelastic option -- 0=none, 1=free-gas, 2=s(a,b)
-            njoy_input.write("2 ")
-            # elastic option -- 0=none, 1=ENDF6 format
-            njoy_input.write("0 ")
+            njoy_input.write("1 ")  # number of temperatures
+            njoy_input.write("2 ")  # inelastic option -- 2=s(a,b)
+            njoy_input.write("0 ")  # elastic option -- 0=none
             njoy_input.write("0 ")  # output format
             njoy_input.write(f"{argv.inelastic_thermal_num_atoms} ")
             njoy_input.write(f"{argv.inelastic_thermal_number} ")
-            njoy_input.write(f"1/\n")  # prinnt option -- 0=min, 1=max
+            njoy_input.write(f"1/\n")  # print option -- 1=max
 
-            njoy_input.write(f"{argv.temperature}/\n")  # temperatures
+            njoy_input.write(f"{argv.temperature}/\n")
 
             njoy_input.write("0.005 ")  # tolerance
             njoy_input.write("5.0/\n")  # maximum energy for thermal
@@ -719,13 +716,13 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
     njoy_input.write("7 ")  # legendre order
     njoy_input.write("1 ")  # number of temperatures
     njoy_input.write("1 ")  # number of sigma zeros
-    njoy_input.write("1 ")  # long print option -- 0=min, 1=max
-    njoy_input.write("1/\n")  # smoothing operator -- 0=min, 1=max
+    njoy_input.write("1 ")  # long print option -- 1=max
+    njoy_input.write("1/\n")  # smoothing operator -- 1=max
 
     title = f"{symbol}{mass_num}{metastable}"
-    njoy_input.write(f"'{title}'/\n")  # title
+    njoy_input.write(f"'{title}'/\n")
 
-    njoy_input.write(f"{argv.temperature}/\n")  # temperatures
+    njoy_input.write(f"{argv.temperature}/\n")
     njoy_input.write("0.0/\n")  # sigma zeros value
 
     # custom neutron group structure
@@ -752,6 +749,7 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
     # mf3 cross-sections
     njoy_input.write("3/\n")
 
+    # thermal cross-sections
     if with_thermal:
         njoy_input.write("3 221 'free gas'/\n")
         if with_sab:
@@ -759,8 +757,9 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
                              f"'inelastic s(a,b)'/\n")
             if argv.elastic_thermal_number:
                 njoy_input.write(f"3 {argv.elastic_thermal_number} "
-                                 f"'elastic_s(a,b)'/\n")
+                                 f"'elastic s(a,b)'/\n")
 
+    # fission cross-sections
     if argv.fissile:
         njoy_input.write("3 452 'total nubar (neutron)'/\n")
 
@@ -812,13 +811,13 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
         njoy_input.write("7 ")  # legendre order
         njoy_input.write("1 ")  # number of temperatures
         njoy_input.write("1 ")  # number of sigma zeros
-        njoy_input.write("1 ")  # long print option -- 0=min, 1=max
-        njoy_input.write("1/\n")  # smoothing operator -- 0=min, 1=max
+        njoy_input.write("1 ")  # long print option -- 1=max
+        njoy_input.write("1/\n")  # smoothing operator -- 1=max
 
         title = f"{symbol}{mass_num}{metastable}"
-        njoy_input.write(f"'{title}'/\n")  # title
+        njoy_input.write(f"'{title}'/\n")
 
-        njoy_input.write(f"{argv.temperature}/\n")  # temperatures
+        njoy_input.write(f"{argv.temperature}/\n")
         njoy_input.write("0.0/\n")  # sigma zeros value
 
         # custom neutron group structure
@@ -893,7 +892,9 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
 
         njoy_input.write("-1/\n")  # all reaction data
         njoy_input.write("0/\n")  # terminal gaminr
+
     njoy_input.write("stop\n")
+
 
 # ------------------------------------------------------------
 # Run NJOY

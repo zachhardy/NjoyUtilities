@@ -33,28 +33,28 @@ argparser = argparse.ArgumentParser(
 )
 
 argparser.add_argument(
-    '--output_directory',
+    "--output-directory",
     type=str,
     required=True,
     help="Complete path where to store the output.",
 )
 
 argparser.add_argument(
-    '--njoy_output_filename',
+    "--njoy-output-filename",
     type=str,
     required=True,
     help="Name of output file produced by NJOY."
 )
 
 argparser.add_argument(
-    '--xs_filename',
+    "--xs-filename",
     type=str,
     help="Name of XS file.",
 )
 
 argparser.add_argument(
-    '--plot',
-    action='store_true',
+    "--plot",
+    action="store_true",
     default=False,
     help="A flag for plotting the XS data."
 )
@@ -64,7 +64,7 @@ argv = argparser.parse_args()
 output_directory = os.path.abspath(argv.output_directory)
 if not os.path.isdir(output_directory):
     warnings.warn(
-        "Value supplied to --output_directory does not point to an "
+        "Value supplied to --output-directory does not point to an "
         f"existing directory. Creating one at {output_directory}."
     )
     os.makedirs(output_directory)

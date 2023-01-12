@@ -23,38 +23,38 @@ output_file_prefix="O16_n30"
 cd ../njoy_runner || exit
 
 python3 generate_njoy_mgxs.py \
---njoy_executable=njoy21 \
---path_to_neutron_endf="${ENDF_ROOT}/neutrons/$neutron_file" \
+--njoy-executable=njoy21 \
+--path-to-neutron-endf="${ENDF_ROOT}/neutrons/$neutron_file" \
 --temperature=293.6 \
---neutron_group_structure=3 \
---neutron_weight_function=11 \
---output_directory=$output_directory \
---output_filename=$output_file_prefix.njoy
+--neutron-group-structure=3 \
+--neutron-weight-function=11 \
+--output-directory=$output_directory \
+--output-filename=$output_file_prefix.njoy
 
-# --path_to_neutron_endf=$ENDF_ROOT/neutrons/$neutron_file \
+# --path-to-neutron-endf=$ENDF_ROOT/neutrons/$neutron_file \
 # --path_to_sab=$ENDF_ROOT/thermal_scatt/$sab_file \
-# --inelastic_thermal_number=229 \
-# --inelastic_thermal_num_atoms=1 \
-# --elastic_thermal_number=230 \
-# --path_to_gamma_endf= \
+# --inelastic-thermal-number=229 \
+# --inelastic-thermal-num-atoms=1 \
+# --elastic-thermal-number=230 \
+# --path-to-gamma-endf= \
 # --temperature=296.0 \
-# --neutron_group_structure=22 \
-# --neutron_weight_function=8 \
-# --output_directory=$output_directory \
-# --output_filename=$output_file_prefix.njoy \
-# --gamma_group_structure=0 \
-# --gamma_weight_function=2 \
-# --custom_neutron_gs_file="" \
-# --custom_gamma_gs_file="" \
-# --custom_neutron_wt_file="" \
-# --custom_gamma_wt_file="" \
+# --neutron-group-structure=22 \
+# --neutron-weight-function=8 \
+# --output-directory=$output_directory \
+# --output-filename=$output_file_prefix.njoy \
+# --gamma-group-structure=0 \
+# --gamma-weight-function=2 \
+# --custom-neutron-gs-file="" \
+# --custom-gamma-gs-file="" \
+# --custom-neutron-wt-file="" \
+# --custom-gamma-wt-file="" \
 
 echo "********** DONE with GENERATION"
 
 python3 njoy_processor.py \
---output_directory=$output_directory \
---njoy_output_filename=$output_file_prefix.njoy \
---xs_filename=$output_file_prefix.xs \
+--output-directory=$output_directory \
+--njoy-output-filename=$output_file_prefix.njoy \
+--xs-filename=$output_file_prefix.xs \
 --plot
 
 echo "********** DONE with PROCESSING"

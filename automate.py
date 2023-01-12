@@ -1,3 +1,8 @@
+"""
+An automation script that can run NJOY, process outputs, and write cross-section
+data files for combinations of listed materials, group structures, and temperatures.
+"""
+
 import os
 import argparse
 import textwrap
@@ -87,7 +92,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--plot",
+        '--plot',
         action='store_true',
         default=False,
         help="A flag for plotting."
@@ -170,20 +175,24 @@ if __name__ == "__main__":
 
                 filename = material_info['symbol']
                 filename += str(material_info['mass_number'])
-                if with_thermal:
-                    suffix = material_info['molecule']
-                    suffix = suffix if suffix else "freegas"
-                    filename = f"{filename}_{suffix}"
+                if material_info['molecule']:
+                    filename = f"{filename}_{material_info['molecule']}"
+                elif not with_thermal:
+                    filename = f"{filename}_notherm"
 
                 # --------------------------------------------------
                 # Print summary
                 # --------------------------------------------------
 
-                msg = f"Processing isotope {isotope}, "
+                print()
+                print(f"##################################################")
+                print(f"{'Isotope':<20}: {isotope}")
                 if molecule:
-                    msg += f"molecule {molecule}, "
-                msg += f"temperature {temperature_name}..."
-                print(msg)
+                    print(f"{'Molecule':<20}: {molecule}")
+                print(f"{'Group Structure':<20}: {gs}")
+                print(f"{'Temperature':<20}: {temperature}")
+                print(f"##################################################")
+                print()
 
                 # --------------------------------------------------
                 # Write the run and process script
@@ -203,21 +212,21 @@ if __name__ == "__main__":
                     )
 
                     njoy = f"  python njoy_runner.py \\\n" \
-                           f"  --njoy_executable=njoy21 \\\n" \
+                           f"  --njoy-executable=njoy21 \\\n" \
                            f"  --temperature={temperature} \\\n"
 
                     # neutron data
                     if neutron_endf and gs_info['neutron']:
-                        njoy += f"  --path_to_neutron_endf={neutron_endf} \\\n"
+                        njoy += f"  --path-to-neutron-endf={neutron_endf} \\\n"
 
                         # add group structure info
                         neutron_gs = gs_info['neutron']['gs_id']
-                        njoy += f"  --neutron_group_structure={neutron_gs} \\\n"
+                        njoy += f"  --neutron-group-structure={neutron_gs} \\\n"
 
                     # add custom group structure file
                     if neutron_gs == 1:
                         neutron_gs_file = gs_info['neutron']['gs_file']
-                        njoy += f"  --custom_neutron_gs_file={neutron_gs_file} \\\n"
+                        njoy += f"  --custom-neutron-gs-file={neutron_gs_file} \\\n"
 
                     # gamma/photo-atomic data
                     if gs_info['gamma']:
@@ -225,44 +234,44 @@ if __name__ == "__main__":
                             continue
 
                         if gamma_endf:
-                            njoy += f"  --path_to_gamma_endf={gamma_endf} \\\n"
+                            njoy += f"  --path-to-gamma-endf={gamma_endf} \\\n"
                         if photoat_endf:
-                            njoy += f"  --path_to_photoat_endf={photoat_endf} \\\n"
+                            njoy += f"  --path-to-photoat-endf={photoat_endf} \\\n"
 
                         # gamma group structure
                         gamma_gs = gs_info['gamma']['gs_id']
-                        njoy += f"  --gamma_group_structure={gamma_gs} \\\n"
+                        njoy += f"  --gamma-group-structure={gamma_gs} \\\n"
 
                         # add custom group structure file
                         if gamma_gs == 1:
                             gamma_gs_file = gs_info['gamma']['gs_file']
-                            njoy += f"  --custom_gamma_gs_file={gamma_gs_file} \\\n"
+                            njoy += f"  --custom-gamma-gs-file={gamma_gs_file} \\\n"
 
                     # thermal scattering data
                     if sab_info:
                         sab_endf = sab_info['sab_endf']
-                        njoy += f"  --path_to_sab_endf={sab_endf} \\\n"
+                        njoy += f"  --path-to-sab-endf={sab_endf} \\\n"
 
                         # add inelastic thermal scattering
                         mti = sab_info['mti']
-                        njoy += f"  --inelastic_thermal_number={mti} \\\n"
+                        njoy += f"  --inelastic-thermal-number={mti} \\\n"
 
                         # add elastic thermal scattering
                         if "mtc" in sab_info:
                             mtc = sab_info['mtc']
-                            njoy += f"  --elastic_thermal_number={mtc} \\\n"
+                            njoy += f"  --elastic-thermal-number={mtc} \\\n"
 
                         # add the number of principal atoms
                         n_atoms = sab_info['n_atoms']
-                        njoy += f"  --inelastic_thermal_num_atoms={n_atoms} \\\n"
+                        njoy += f"  --inelastic-thermal-num-atoms={n_atoms} \\\n"
 
                     # fission flag
                     if material_info['atomic_number'] >= 90:
                         njoy += "  --fissile \\\n"
 
                     # output data
-                    njoy += f"  --output_directory={outdir} \\\n"
-                    njoy += f"  --output_filename={filename}.njoy\n\n"
+                    njoy += f"  --output-directory={outdir} \\\n"
+                    njoy += f"  --output-filename={filename}.njoy\n\n"
 
                     f.write(njoy)
                     f.write("fi\n\n")
@@ -277,9 +286,9 @@ if __name__ == "__main__":
                     )
 
                     process = f"  python3 njoy_processor.py \\\n" \
-                              f"  --output_directory={outdir} \\\n" \
-                              f"  --njoy_output_filename={filename}.njoy \\\n" \
-                              f"  --xs_filename={filename}.xs"
+                              f"  --output-directory={outdir} \\\n" \
+                              f"  --njoy-output-filename={filename}.njoy \\\n" \
+                              f"  --xs-filename={filename}.xs"
                     process += f"  \\\n  --plot\n\n" if argv.plot else "\n\n"
 
                     f.write(process)
