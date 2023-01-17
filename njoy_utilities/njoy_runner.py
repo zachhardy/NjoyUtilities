@@ -450,7 +450,7 @@ with_thermal = not argv.no_thermal
 # groupr neutron input 21,27    output 28
 # groupr gamma   input 61,63    output 64
 # gaminr         input 71,72    output 73
-# matxsr         input 28,64,73 output 99
+# matxsr         input 28,64,73 output 90
 
 
 # ------------------------------------------------------------
@@ -893,6 +893,17 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
 
         njoy_input.write("-1/\n")  # all reaction data
         njoy_input.write("0/\n")  # terminal gaminr
+
+    # ------------------------------------------------------------ MACXSR
+
+    # njoy_input.write("macxsr\n")
+    # njoy_input.write("-28 ")                # primary GROUPR output
+    # if with_photoat:
+    #     njoy_input.write("-73 ")            # GAMINR output
+    # njoy_input.write("-90")                 # output tape
+    # if with_gamma:
+    #     njoy_input.write(" 0 0 0 0 0 -64")  # photonuclear GROUPR output
+
 
     njoy_input.write("stop\n")
 
