@@ -364,14 +364,14 @@ def build_combined_data(
 
     # include all scattering except for thermal
     fission_mats = np.zeros((1, G, G))
-    scattering_mats = np.zeros((M, G, G))
+    transfer_mats = np.zeros((M, G, G))
     for particle, transfers in transfer_matrices.items():
         for rxn_type, data in transfers.items():
             if not data:
                 continue
 
             # ----------------------------------------
-            # Scattering matrix
+            # Transfer matrices
             # ----------------------------------------
 
             if "fission" not in rxn_type:
@@ -383,15 +383,15 @@ def build_combined_data(
 
                 if particle == "neutron":
                     if "n," in rxn_type:
-                        add_transfer_neutron(data, scattering_mats)
+                        add_transfer_neutron(data, transfer_mats)
                     elif "g," in rxn_type:
-                        add_transfer_neutron(data, scattering_mats, True)
+                        add_transfer_neutron(data, transfer_mats, True)
 
                 elif particle == "gamma":
                     if "g," in rxn_type:
-                        add_transfer_gamma(data, scattering_mats)
+                        add_transfer_gamma(data, transfer_mats)
                     elif "n," in rxn_type:
-                        add_transfer_gamma(data, scattering_mats, True)
+                        add_transfer_gamma(data, transfer_mats, True)
 
             # ----------------------------------------
             # Fission matrix
@@ -403,9 +403,14 @@ def build_combined_data(
                         add_transfer_neutron(data, fission_mats)
                     elif "g," in rxn_type:
                         add_transfer_neutron(data, fission_mats, True)
+
+                # NOTE: Per discussion with Ragusa, gamma production
+                #       should be housed in the transfer matrix due
+                #       to it not being the particle whose production
+                #       we are interested in
                 elif particle == "gamma":
                     if "n," in rxn_type:
-                        add_transfer_gamma(data, fission_mats, True)
+                        add_transfer_gamma(data, transfer_mats, True)
 
     # Hard coded check for (g,fission) neutron matrix.
     # In all NJOY outputs encountered thus far, this reaction has only
@@ -438,14 +443,14 @@ def build_combined_data(
         elastic = np.zeros((M, G, G))
         add_transfer_neutron(nn_transfers['(n,elastic)'], elastic)
         elastic = elastic[:, bgn:end, bgn:end]
-        scattering_mats[:, bgn:end, bgn:end] -= elastic
+        transfer_mats[:, bgn:end, bgn:end] -= elastic
 
         # add thermal treatment to the transfer matrix
         thermal = np.zeros((M, G, G))
         for rxn_type in thermal_rxns:
             add_transfer_neutron(nn_transfers[rxn_type], thermal)
         thermal = thermal[:, bgn:end, bgn:end]
-        scattering_mats[:, bgn:end, bgn:end] += thermal
+        transfer_mats[:, bgn:end, bgn:end] += thermal
 
         # apply thermal treatment to toal scattering
         sig_s[bgn:end] = sig_therm[bgn:end]
@@ -458,16 +463,16 @@ def build_combined_data(
     # Compute sparsity
     # ------------------------------------------------------------
 
-    scattering_sparsity = []
-    for m in range(len(scattering_mats)):
+    transfer_sparsity = []
+    for m in range(len(transfer_mats)):
         nonzeros = []
         for gp in range(G):
             entries = []
             for g in range(G):
-                if np.abs(scattering_mats[m][gp][g]) > 1.0e-16:
+                if np.abs(transfer_mats[m][gp][g]) > 1.0e-16:
                     entries.append(g)
             nonzeros.append(entries)
-        scattering_sparsity.append(nonzeros)
+        transfer_sparsity.append(nonzeros)
 
     fission_sparsity = []
     for m in range(len(fission_mats)):
@@ -554,7 +559,7 @@ def build_combined_data(
     # ------------------------------------------------------------
 
     if plot:
-        A = [np.copy(scattering_mats[0]).T, np.copy(fission_mats[0]).T]
+        A = [np.copy(transfer_mats[0]).T, np.copy(fission_mats[0]).T]
         nz = [np.nonzero(a) for a in A]
         for i in range(2):
             A[i][nz[i]] = np.log10(A[i][nz[i]]) + 10.0
@@ -730,8 +735,8 @@ def build_combined_data(
                    'precursor_fraction': precursor_fraction,
                    'inv_velocity': inv_v,
                    'avg_energy': e_avg,
-                   'scattering_matrices': scattering_mats,
-                   'scattering_matrices_sparsity': scattering_sparsity,
+                   'scattering_matrices': transfer_mats,
+                   'scattering_matrices_sparsity': transfer_sparsity,
                    'fission_matrices': fission_mats,
                    'fission_matrices_sparsity': fission_sparsity}
 
