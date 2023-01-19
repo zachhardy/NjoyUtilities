@@ -578,7 +578,7 @@ if not output_filename:
     output_filename = f"{symbol}{mass_num}{metastable}"
     if with_thermal and not with_sab:
         output_filename = f"{output_filename}_freegas"
-    output_filename = f"{output_filename}.txt"
+    output_filename = f"{output_filename}.njoy"
 
 # ------------------------------------------------------------
 # Write NJOY input
@@ -895,15 +895,11 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
         njoy_input.write("0/\n")  # terminal gaminr
 
     # ------------------------------------------------------------ MACXSR
+    # TODO: Get a generalized MACXSR writer working.
+    # TODO: Write a routine to get the number of groups for each
+    #       particle's group structure.
 
     # njoy_input.write("macxsr\n")
-    # njoy_input.write("-28 ")                # primary GROUPR output
-    # if with_photoat:
-    #     njoy_input.write("-73 ")            # GAMINR output
-    # njoy_input.write("-90")                 # output tape
-    # if with_gamma:
-    #     njoy_input.write(" 0 0 0 0 0 -64")  # photonuclear GROUPR output
-
 
     njoy_input.write("stop\n")
 
@@ -920,7 +916,11 @@ else:
 print(f"command line = {cmd_line}")
 
 os.system(cmd_line)
-os.system("rm tape* NJOY_INPUT.txt")
+os.system("rm tape*")
+
+input_path = os.path.join(output_directory, f"{output_filename}.input")
+print(f"Copying NJOY input file to {input_path}")
+os.system(f"cp NJOY_INPUT.txt {input_path} && rm -f NJOY_INPUT.txt")
 
 output_path = os.path.join(output_directory, output_filename)
 print(f"Copying output file to {output_path}")
