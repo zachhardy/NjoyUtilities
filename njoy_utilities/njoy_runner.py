@@ -432,7 +432,7 @@ if not os.path.isdir(output_directory):
         f"existing directory. Creating one at {output_directory}..."
     )
     os.makedirs(output_directory)
-output_filename = argv.output_filename
+output_filename = argv.output_filename.split('.')[0]
 
 with_neutron = argv.path_to_neutron_endf is not None
 with_gamma = argv.path_to_gamma_endf is not None
@@ -592,7 +592,7 @@ if not output_filename:
     output_filename = f"{symbol}{mass_num}{metastable}"
     if with_thermal and not with_sab:
         output_filename = f"{output_filename}_freegas"
-    output_filename = f"{output_filename}.njoy"
+    output_filename = f"{output_filename}"
 
 # ------------------------------------------------------------
 # Write NJOY input
@@ -968,14 +968,8 @@ print(f"command line = {cmd_line}")
 
 os.system(cmd_line)
 
-if os.path.isfile("tape90"):
-    matxs_filename = f"{output_filename.split('.')[0]}.matxs"
-    matxs_path = os.path.join(output_directory, matxs_filename)
-    print(f"Copying MATXS file to {matxs_path}")
-    os.system(f"cp tape90 {matxs_path}")
-
-output_path = os.path.join(output_directory, output_filename)
-print(f"Copying output file to {output_path}")
-os.system(f"cp out {output_path}")
+output_path = os.path.join(output_directory, f"{output_filename}")
+print(f"Copying output file to {output_path}.njoy")
+os.system(f"cp out {output_path}.njoy")
 
 os.system("rm tape* out NJOY_INPUT.txt")
