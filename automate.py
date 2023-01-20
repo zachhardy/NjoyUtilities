@@ -221,7 +221,9 @@ if __name__ == "__main__":
 
                         # add group structure info
                         neutron_gs = gs_info['neutron']['gs_id']
+                        neutron_n_grps = gs_info['neutron']['n_groups']
                         njoy += f"  --neutron-group-structure={neutron_gs} \\\n"
+                        njoy += f"  --neutron-num-groups={neutron_n_grps} \\\n"
 
                     # add custom group structure file
                     if neutron_gs == 1:
@@ -240,7 +242,9 @@ if __name__ == "__main__":
 
                         # gamma group structure
                         gamma_gs = gs_info['gamma']['gs_id']
+                        gamma_n_grps = gs_info['gamma']['n_groups']
                         njoy += f"  --gamma-group-structure={gamma_gs} \\\n"
+                        njoy += f"  --gamma-num-groups={gamma_n_grps} \\\n"
 
                         # add custom group structure file
                         if gamma_gs == 1:

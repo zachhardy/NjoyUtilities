@@ -198,6 +198,13 @@ argparser.add_argument(
 )
 
 argparser.add_argument(
+    '--neutron-num-groups',
+    type=int,
+    required=True,
+    help="The number of neutron energy groups."
+)
+
+argparser.add_argument(
     '--custom-neutron-gs-file',
     type=str,
     help=textwrap.dedent('''\
@@ -233,6 +240,13 @@ argparser.add_argument(
     The gamma group structure.
     If 1, --custom-gamma-gs-file is required.
     Default 0, no gamma group structure.''')
+)
+
+argparser.add_argument(
+    '--gamma-num-groups',
+    type=int,
+    default=0,
+    help="The number of gamma energy groups."
 )
 
 argparser.add_argument(
@@ -895,11 +909,48 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
         njoy_input.write("0/\n")  # terminal gaminr
 
     # ------------------------------------------------------------ MACXSR
-    # TODO: Get a generalized MACXSR writer working.
-    # TODO: Write a routine to get the number of groups for each
-    #       particle's group structure.
+    # TODO: Add in cross-particle inputs
 
-    # njoy_input.write("macxsr\n")
+    if not with_photoat and not with_gamma:
+
+        njoy_input.write("matxsr\n")
+
+        njoy_input.write("-28 0 -90/\n")
+
+        njoy_input.write("0 'LANL NJOY'/\n")
+
+        n_types = 2 if with_thermal else 1
+        njoy_input.write(f"1 {n_types} 1 1/\n")
+
+        hollerith = f"MATXS - {argv.neutron_num_groups} NEUTRON GROUPS"
+        njoy_input.write(f"'{hollerith}'/\n")
+
+        njoy_input.write(f"'n'/\n")
+
+        njoy_input.write(f"{argv.neutron_num_groups}/\n")
+
+        njoy_input.write(f"'nscat'")
+        if with_thermal:
+            njoy_input.write(" 'ntherm'")
+        njoy_input.write("/\n")
+
+        njoy_input.write("1")
+        if with_thermal:
+            njoy_input.write(" 1")
+        njoy_input.write("/\n")
+
+        njoy_input.write("1")
+        if with_thermal:
+            njoy_input.write(" 1")
+        njoy_input.write("/\n")
+
+        njoy_input.write(f"{symbol.upper()}{mass_num} "
+                         f"{neutron_material_number}/\n")
+
+    # ------------------------------------------------------------ MODER
+
+    # njoy_input.write("moder\n")
+    # njoy_input.write("-90 91/\n")
 
     njoy_input.write("stop\n")
 
@@ -916,12 +967,15 @@ else:
 print(f"command line = {cmd_line}")
 
 os.system(cmd_line)
-os.system("rm tape*")
 
-input_path = os.path.join(output_directory, f"{output_filename}.input")
-print(f"Copying NJOY input file to {input_path}")
-os.system(f"cp NJOY_INPUT.txt {input_path} && rm -f NJOY_INPUT.txt")
+if os.path.isfile("tape90"):
+    matxs_filename = f"{output_filename.split('.')[0]}.matxs"
+    matxs_path = os.path.join(output_directory, matxs_filename)
+    print(f"Copying MATXS file to {matxs_path}")
+    os.system(f"cp tape90 {matxs_path}")
 
 output_path = os.path.join(output_directory, output_filename)
 print(f"Copying output file to {output_path}")
-os.system(f"cp out {output_path} && rm -f out")
+os.system(f"cp out {output_path}")
+
+os.system("rm tape* out NJOY_INPUT.txt")

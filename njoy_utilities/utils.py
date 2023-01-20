@@ -145,7 +145,7 @@ def get_group_structure_info(group_structures: list[str]) -> dict:
         outdir = f"{gamma_gs}"
     else:
         raise AssertionError("No neutron or gamma group structure found.")
-    info["outdir"] = os.path.join(info["outdir"], outdir)
+    info['outdir'] = os.path.join(info['outdir'], outdir)
 
     # ------------------------------------------------------------
     # Define the neutron NJOY input
@@ -155,13 +155,17 @@ def get_group_structure_info(group_structures: list[str]) -> dict:
 
         # custom group structures
         if neutron_gs.startswith("custom"):
-            info["neutron"]["gs_id"] = 1
+            info['neutron']['gs_id'] = 1
+
+            # get number of groups
+            loc = neutron_gs.rfind("custom") + 6
+            info['neutron']['n_groups'] = int(neutron_gs[loc:-1])
 
             # ensure there is a custom file
-            n_gs_file = os.path.join(info["outdir"], f"{neutron_gs}.txt")
+            n_gs_file = os.path.join(info['outdir'], f"{neutron_gs}.txt")
             if not os.path.isfile(n_gs_file):
                 raise FileNotFoundError(f"{n_gs_file} is not a valid file.")
-            info["neutron"]["gs_file"] = n_gs_file
+            info['neutron']['gs_file'] = n_gs_file
 
         # lanl group structures
         elif neutron_gs.startswith("lanl"):
@@ -172,11 +176,15 @@ def get_group_structure_info(group_structures: list[str]) -> dict:
                 raise ValueError("Invalid LANL neutron group structure.")
 
             # define group structure id
-            info["neutron"]["gs_id"] = \
+            info['neutron']['gs_id'] = \
                 3 if "30" in neutron_gs else \
                 11 if "70" in neutron_gs else \
                 13 if "80" in neutron_gs else \
                 10 if "187" in neutron_gs else 34
+
+            # get number of groups
+            loc = neutron_gs.find("lanl") + 4
+            info['neutron']['n_groups'] = int(neutron_gs[loc:-1])
 
         else:
             raise ValueError("Invalid neutron group structure.")
@@ -189,13 +197,17 @@ def get_group_structure_info(group_structures: list[str]) -> dict:
 
         # custom group structures
         if gamma_gs.startswith("custom"):
-            info["gamma"]["gs_id"] = 1
+            info['gamma']['gs_id'] = 1
+
+            # get number of groups
+            loc = gamma_gs.rfind("custom") + 6
+            info['gamma']['n_groups'] = int(gamma_gs[loc:-1])
 
             # check the custom file
-            g_gs_file = os.path.join(info["outdir"], f"{gamma_gs}.txt")
+            g_gs_file = os.path.join(info['outdir'], f"{gamma_gs}.txt")
             if not os.path.isfile(g_gs_file):
                 raise FileNotFoundError(f"{g_gs_file} is not a valid file.")
-            info["gamma"]["gs_file"] = g_gs_file
+            info['gamma']['gs_file'] = g_gs_file
 
         # lanl group structures
         elif gamma_gs.startswith("lanl"):
@@ -206,9 +218,13 @@ def get_group_structure_info(group_structures: list[str]) -> dict:
                 raise ValueError("Invalid LANL gamma group structure.")
 
             # define group structure id
-            info["gamma"]["gs_id"] = \
+            info['gamma']['gs_id'] = \
                 3 if "12" in gamma_gs else \
                 7 if "24" in gamma_gs else 6
+
+            # get number of groups
+            loc = gamma_gs.rfind("lanl") + 4
+            info['gamma']['n_groups'] = int(gamma_gs[loc:-1])
 
         else:
             raise ValueError("Invalid gamma group structure.")
