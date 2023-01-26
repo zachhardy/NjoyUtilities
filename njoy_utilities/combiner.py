@@ -500,59 +500,60 @@ def build_combined_data(
     # greater than 1)
 
     # checks for neutron-neutron fission
-    nn_fission = fission_mats[0][:G_n, :G_n]
-    nu_sig_f = nu_prompt[:G_n] * sig_f[:G_n]
-    estimate = np.sum(nn_fission, axis=1)
-    prod_error = np.abs(estimate - nu_sig_f) / np.abs(nu_sig_f)
-    if any(prod_error > 1.0e-4):
-        raise AssertionError(
-            "Abnormally large difference in the production "
-            "cross-section computed from the production matrix "
-            "and its vector counterpart."
-        )
+    if np.sum(sig_f) > 0.0:
+        nn_fission = fission_mats[0][:G_n, :G_n]
+        nu_sig_f = nu_prompt[:G_n] * sig_f[:G_n]
+        estimate = np.sum(nn_fission, axis=1)
+        prod_error = np.abs(estimate - nu_sig_f) / np.abs(nu_sig_f)
+        if any(prod_error > 1.0e-4):
+            raise AssertionError(
+                "Abnormally large difference in the production "
+                "cross-section computed from the production matrix "
+                "and its vector counterpart."
+            )
 
-    spectra = nn_fission / estimate[:, np.newaxis]
-    if any(np.abs(np.sum(spectra, axis=1) - 1.0) > 1.0e-4):
-        raise AssertionError(
-            "Not all prompt fission spectra summed to unity."
-        )
+        spectra = nn_fission / estimate[:, np.newaxis]
+        if any(np.abs(np.sum(spectra, axis=1) - 1.0) > 1.0e-4):
+            raise AssertionError(
+                "Not all prompt fission spectra summed to unity."
+            )
 
-    # checks for gamma-neutron fission
-    gn_fission = fission_mats[0][G_n:, :G_n]
-    nu_sig_f = nu_prompt[G_n:] * sig_f[G_n:]
-    estimate = np.sum(gn_fission, axis=1)
+        # checks for gamma-neutron fission
+        gn_fission = fission_mats[0][G_n:, :G_n]
+        nu_sig_f = nu_prompt[G_n:] * sig_f[G_n:]
+        estimate = np.sum(gn_fission, axis=1)
 
-    nz = nu_sig_f > 0.0
-    prod_error = np.abs(estimate[nz] - nu_sig_f[nz]) / np.abs(nu_sig_f[nz])
-    if any(prod_error > 1.0e-4):
-        raise AssertionError(
-            "Abnormally large difference in the production "
-            "cross-section computed from the production matrix "
-            "and its vector counterpart."
-        )
+        nz = nu_sig_f > 0.0
+        prod_error = np.abs(estimate[nz] - nu_sig_f[nz]) / np.abs(nu_sig_f[nz])
+        if any(prod_error > 1.0e-4):
+            raise AssertionError(
+                "Abnormally large difference in the production "
+                "cross-section computed from the production matrix "
+                "and its vector counterpart."
+            )
 
-    spectra = gn_fission[nz] / estimate[nz, np.newaxis]
-    if any(np.abs(np.sum(spectra, axis=1) - 1.0) > 1.0e-3):
-        raise AssertionError(
-            "Not all prompt fission spectra summed to unity."
-        )
+        spectra = gn_fission[nz] / estimate[nz, np.newaxis]
+        if any(np.abs(np.sum(spectra, axis=1) - 1.0) > 1.0e-3):
+            raise AssertionError(
+                "Not all prompt fission spectra summed to unity."
+            )
 
-    # NOTE: No checks for neutron-gamma fission can be performed because
-    # there is no vector data for gammas per fission. Instead, here are
-    # some printouts to see if the data looks reasonable. A normal number
-    # of gammas per neutron-induced fission is usually between 7 and 12.
+        # NOTE: No checks for neutron-gamma fission can be performed because
+        # there is no vector data for gammas per fission. Instead, here are
+        # some printouts to see if the data looks reasonable. A normal number
+        # of gammas per neutron-induced fission is usually between 7 and 12.
 
-    # ng_fission = fission_mats[0][:G_n, G_n:]
-    # nu_sigf = np.sum(ng_fission, axis=1)
-    # print("Gamma production cross-section:")
-    # print(nu_sigf)
-    # print()
-    # print("Prompt gammas per neutron-induced fission:")
-    # print(nu_sigf / sig_f[:G_n])
-    # print()
+        # ng_fission = fission_mats[0][:G_n, G_n:]
+        # nu_sigf = np.sum(ng_fission, axis=1)
+        # print("Gamma production cross-section:")
+        # print(nu_sigf)
+        # print()
+        # print("Prompt gammas per neutron-induced fission:")
+        # print(nu_sigf / sig_f[:G_n])
+        # print()
 
-    # NOTE: No gamma-gamma fission data exists, nor can it be estimated
-    # from other quantities due to the lack of gamma per fission data.
+        # NOTE: No gamma-gamma fission data exists, nor can it be estimated
+        # from other quantities due to the lack of gamma per fission data.
 
     # ------------------------------------------------------------
     # Plotting

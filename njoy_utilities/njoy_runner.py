@@ -462,9 +462,12 @@ with_thermal = not argv.no_thermal
 # thermr freeg   input 25       output 26
 # thermr sab     input 50,26    output 27
 # groupr neutron input 21,27    output 28
+# moder  neutron input 28       output 90
 # groupr gamma   input 61,63    output 64
+# moder  gamma   input 64       output 91
 # gaminr         input 71,72    output 73
-# matxsr         input 28,64,73 output 90
+# moder          input 73       output 92
+# matxsr         input 90,91,92 output 99
 
 
 # ------------------------------------------------------------
@@ -815,6 +818,9 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
     njoy_input.write("0/\n")  # terminate reactions
     njoy_input.write("0/\n")  # terminate groupr
 
+    njoy_input.write("moder\n")
+    njoy_input.write("-28 90/\n")
+
     if with_gamma:
         njoy_input.write("groupr\n")
         njoy_input.write("-61 -63 0 -64/\n")
@@ -877,6 +883,9 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
         njoy_input.write("0/\n")  # terminate reactions
         njoy_input.write("0/\n")  # terminate groupr
 
+        njoy_input.write("moder\n")
+        njoy_input.write("-64 91/\n")
+
     # ------------------------------------------------------------ GAMINR
 
     if with_photoat:
@@ -908,6 +917,9 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
         njoy_input.write("-1/\n")  # all reaction data
         njoy_input.write("0/\n")  # terminal gaminr
 
+        njoy_input.write("moder\n")
+        njoy_input.write("-73 92/\n")
+
     # ------------------------------------------------------------ MACXSR
     # TODO: Add in cross-particle inputs
 
@@ -915,7 +927,7 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
 
         njoy_input.write("matxsr\n")
 
-        njoy_input.write("-28 0 -90/\n")
+        njoy_input.write("90 0 99/\n")
 
         njoy_input.write("0 'LANL NJOY'/\n")
 
@@ -947,11 +959,6 @@ with open("NJOY_INPUT.txt", 'w') as njoy_input:
         njoy_input.write(f"{symbol.upper()}{mass_num} "
                          f"{neutron_material_number}/\n")
 
-    # ------------------------------------------------------------ MODER
-
-    # njoy_input.write("moder\n")
-    # njoy_input.write("-90 91/\n")
-
     njoy_input.write("stop\n")
 
 
@@ -971,5 +978,9 @@ os.system(cmd_line)
 output_path = os.path.join(output_directory, f"{output_filename}")
 print(f"Copying output file to {output_path}.njoy")
 os.system(f"cp out {output_path}.njoy")
+
+if os.path.isfile("tape99"):
+    print(f"Copying MATXS file to {output_path}.matxs")
+    os.system(f"cp tape99 {output_path}.matxs")
 
 os.system("rm tape* out NJOY_INPUT.txt")
