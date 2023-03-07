@@ -11,27 +11,27 @@ Runs with python3.
 
 ### Step 1: Download and set up your flavor of ENDF
 
-- The entire ENDF8.0 library (Preferred) 
-  [ENDFVIII.0](https://www.nndc.bnl.gov/endf/b8.0/zips/ENDF-B-VIII.0.zip) 
+- The full ENDF/B-VIII.0 library (Preferred) 
+  [ENDF-BVIII.0](https://www.nndc.bnl.gov/endf-b8.0/download.html) 
   (~500Mb on download, ~2Gb extracted)
 - The entire ENDF7.1 library 
-  [ENDFVII.1](https://ndclx4.bnl.gov/gf/download/frsrelease/138/2242/ENDF-B-VII.1.tar.gz)
+  [ENDF-BVII.1](https://www.nndc.bnl.gov/endf-b7.1/download.html)
 - Older versions. 
   Go to Brookhaven National Laboratory's site 
-  [National Nuclear Data Center](https://www.nndc.bnl.gov/exfor/endf00.jsp) 
+  [National Nuclear Data Center](https://www.nndc.bnl.gov/endf-b8.0) 
   and download what you need. 
 
-Extract this library in a folder of your choice which we shall just call `ENDF_DIR`.
+Extract this library in a folder of your choice.
 
 For example, on Linux machines, you can do this using: 
 - ```shell 
   curl -O https://www.nndc.bnl.gov/endf/b8.0/zips/ENDF-B-VIII.0.zip
   ```
 - unzip using the ```unzip``` command
-- set the envrionement variable `ENDF_ROOT` to point to `ENDF_DIR`. 
+- set the envrionement variable `ENDF_ROOT` to where ENDF was extracted. 
   In bash, this is
   ```shell
-  export ENDF_ROOT=<path-to-ENDF_DIR>
+  export ENDF_ROOT=<path-to-endf>
   ```
   **Note:** this is the absolute path.
   
@@ -43,47 +43,38 @@ NJOY2016 is hosted on GitHub at
 [https://github.com/njoy/NJOY2016](https://github.com/njoy/NJOY2016), 
 and NJOY21 at [https://github.com/njoy/NJOY21](https://github.com/njoy/NJOY21). 
 Installation instructions are located on each site and are summarized below for 
-installing NJOY2016
+installing NJOY21
 
-Make sure you meet the prerequisites:
+The prerequisites for NJOY21 are:
 
-- C++17 or higher (If you have GCC or clang then you should be good)
+- C++17 or higher
 - Fortran 2003 or higher
 - Python 3.4+
-- CMake 3.2+
+- CMake 3.14+
+- git 2.1+
 
-After this is good to go, do the following. Go to a folder where you want to install NJOY2016
+After this is completed, go to a directory where you would like to unpack NJOY21 and run:
 
 ```shell
 # Download the source code
-git clone https://github.com/njoy/NJOY2016
+git clone --branch v1.2.1 https://github.com/njoy/NJOY21
+cd NJOY21
 
-# Get the desired version of NJOY21 (1.1.0 in this example)
-cd NJOY2016
-wget https://raw.githubusercontent.com/njoy/signatures/master/NJOY21/1.1.0-NJOY21.json
-./metaconfigure/fetch_subprojects.py 1.1.0-NJOY21.json
-```
-Yes, we know the file points to NJOY21. We checked and it works for NJOY2016.
-
-```shell
-# Configure the build process
+# Configure the build
 mkdir bin
 cd bin
 cmake -D CMAKE_BUILD_TYPE=Release ..
 
-# Build NJOY21
+# Build and test NJOY21
 make
-
-# Test NJOY21
 make test
 ```
+The installation process is comparable for NJOY2016.
 
 Next add `njoy` to your environment variables. 
 This may be different depending on your system. 
-For `bash` users, in order to add the current `bin`-directory to your `PATH`-environment variable, 
-type `pwd` and copy the path (let us use the place-holder `<path-to-njoy>` for this path). 
-Next add the following to your `~/.bashrc` or `~/.bash_profile` file:
-
+For `bash` users, in order to add the current `bin`-directory to your `PATH`-environment variable,  type `pwd` and copy the path (denoted `<path_to_njoy>`). 
+Next use the command:
 ```shell
 export PATH=<path-to-njoy>:$PATH
 ```
