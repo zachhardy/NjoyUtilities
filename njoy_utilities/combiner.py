@@ -42,6 +42,7 @@ def build_combined_data(
     # ------------------------------------------------------------
 
     problem_description = {}
+    print(n_gs, g_gs)
     if n_gs:
         if g_gs:
             problem_description['type'] = "Neutron + Gamma"
